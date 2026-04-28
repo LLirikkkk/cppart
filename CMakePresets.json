@@ -16,8 +16,7 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CPPART_BUILD_TESTS": "OFF",
         "CPPART_BUILD_BENCHMARKS": "OFF",
-        "CPPART_BUILD_EXAMPLES": "OFF",
-        "CPPART_BUILD_DOCS": "OFF"
+        "CPPART_BUILD_EXAMPLES": "OFF"
       }
     },
     {

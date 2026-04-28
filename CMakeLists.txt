@@ -25,7 +25,3 @@ endif ()
 if (CPPART_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif ()
-
-if (CPPART_BUILD_DOCS)
-    add_subdirectory(docs)
-endif ()
