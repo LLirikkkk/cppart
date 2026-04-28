@@ -4,8 +4,5 @@
 # Presets (local machine)
 CMakeUserPresets.json
 
-# vcpkg artifacts (when using manifest mode/toolchain)
+# vcpkg artifacts
 vcpkg_installed/
-
-# IDEs/editors
-.idea/
