@@ -1,7 +1,7 @@
 {
   "name": "cppart",
   "version": "1.0",
-  "description": "C++ async runtime based on stackless coroutines",
+  "description": "C++23 async runtime based on stackless coroutines",
   "dependencies": [
     {
       "name": "boost-intrusive",
