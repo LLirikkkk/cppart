@@ -4,10 +4,20 @@
 
 namespace art::sched {
 
+/// Interface for schedulers that keep tasks in the intrusive list.
 class IntrusiveListScheduler {
 public:
-  // All tasks that were spawned must be eventually executed
-  virtual void spawn(Resumable<IntrusiveListScheduler>&) noexcept = 0;
+  /// Enqueues task for later execution.
+  ///
+  /// Precondition:
+  /// - task is not currently queued in any scheduler.
+  ///
+  /// Contract:
+  /// - This method must not allocate.
+  /// - All tasks that were spawned must be eventually executed.
+  ///
+  /// \param task Task to enqueue.
+  virtual void spawn(Resumable<IntrusiveListScheduler>& task) noexcept = 0;
 
   virtual ~IntrusiveListScheduler() = default;
 };

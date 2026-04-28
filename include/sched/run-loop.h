@@ -8,6 +8,10 @@
 
 namespace art::sched {
 
+/// Single-thread FIFO run loop. Stores tasks in an intrusive list and executes them on demand.
+///
+/// Thread-safety:
+/// - All methods are not thread-safe and must not be called concurrently.
 class RunLoop final : public IntrusiveListScheduler {
 public:
   RunLoop() = default;
@@ -22,21 +26,36 @@ public:
 
   RunLoop& operator=(RunLoop&&) = delete;
 
-  // Run at most `limit` tasks from queue
-  // Returns number of completed tasks
+  /// Runs at most limit queued tasks.
+  ///
+  /// \param limit Maximum number of tasks to execute.
+  ///
+  /// \return Number of executed tasks.
   std::size_t run_at_most(std::size_t limit) noexcept;
 
-  // Run next task if queue is not empty
-  // Returns true if task were completed
+  /// Runs one queued task if available.
+  ///
+  /// \return <code>true</code> if task was executed, <code>false</code> if the queue was empty.
   bool run_next() noexcept;
 
-  // Run tasks until queue is empty
-  // Returns number of completed tasks
-  // Post-condition: empty() == true
+  /// Run tasks until queue is empty.
+  ///
+  /// \return Number of executed tasks.
   std::size_t run() noexcept;
 
+  /// Enqueues task for later execution.
+  ///
+  /// Precondition:
+  /// - task is not currently queued in any scheduler.
+  ///
+  /// Contract:
+  /// - This method must not allocate.
+  /// - All tasks that were spawned must be eventually executed.
+  ///
+  /// \param task Task to enqueue.
   void spawn(Resumable<IntrusiveListScheduler>& task) noexcept override;
 
+  /// \return <code>true</code> if no tasks are queued.
   bool empty() const noexcept;
 
 private:
