@@ -1,0 +1,146 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "Base",
+      "description": "Common settings for all builds",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CPPART_BUILD_TESTS": "OFF",
+        "CPPART_BUILD_BENCHMARKS": "OFF",
+        "CPPART_BUILD_EXAMPLES": "OFF",
+        "CPPART_BUILD_DOCS": "OFF"
+      }
+    },
+    {
+      "name": "Test-Base",
+      "description": "Common settings for all test builds",
+      "hidden": true,
+      "cacheVariables": {
+        "CPPART_BUILD_TESTS": "ON",
+        "CPPART_TREAT_WARNINGS_AS_ERRORS": "ON",
+        "VCPKG_MANIFEST_FEATURES": "tests"
+      }
+    },
+    {
+      "name": "Default-Release",
+      "description": "Release build",
+      "inherits": "Base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "Default-Debug",
+      "description": "Debug build",
+      "inherits": "Base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "Default-RelWithDebInfo",
+      "description": "RelWithDebInfo build",
+      "inherits": "Base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "Default-Sanitized",
+      "description": "RelWithDebInfo build with undefined and address sanitizers enabled",
+      "inherits": "Default-RelWithDebInfo",
+      "cacheVariables": {
+        "CPPART_SANITIZED": "ON"
+      }
+    },
+    {
+      "name": "Default-SanitizedDebug",
+      "description": "Debug build with undefined and address sanitizers enabled",
+      "inherits": "Default-Debug",
+      "cacheVariables": {
+        "CPPART_SANITIZED": "ON"
+      }
+    },
+    {
+      "name": "Default-ThreadSanitized",
+      "description": "RelWithDebInfo build with thread sanitizer enabled",
+      "inherits": "Default-RelWithDebInfo",
+      "cacheVariables": {
+        "CPPART_THREAD_SANITIZED": "ON"
+      }
+    },
+    {
+      "name": "Default-ThreadSanitizedDebug",
+      "description": "Debug build with thread sanitizer enabled",
+      "inherits": "Default-Debug",
+      "cacheVariables": {
+        "CPPART_THREAD_SANITIZED": "ON"
+      }
+    },
+    {
+      "name": "Test-Release",
+      "description": "Release test build",
+      "inherits": [
+        "Default-Release",
+        "Test-Base"
+      ]
+    },
+    {
+      "name": "Test-Debug",
+      "description": "Debug test build",
+      "inherits": [
+        "Test-Base",
+        "Default-Debug"
+      ]
+    },
+    {
+      "name": "Test-RelWithDebInfo",
+      "description": "RelWithDebInfo test build",
+      "inherits": [
+        "Test-Base",
+        "Default-RelWithDebInfo"
+      ]
+    },
+    {
+      "name": "Test-Sanitized",
+      "description": "RelWithDebInfo test build with undefined and address sanitizers enabled",
+      "inherits": [
+        "Test-Base",
+        "Default-Sanitized"
+      ]
+    },
+    {
+      "name": "Test-SanitizedDebug",
+      "description": "Debug test build with undefined and address sanitizers enabled",
+      "inherits": [
+        "Test-Base",
+        "Default-SanitizedDebug"
+      ]
+    },
+    {
+      "name": "Test-ThreadSanitized",
+      "description": "RelWithDebInfo test build with thread sanitizer enabled",
+      "inherits": [
+        "Test-Base",
+        "Default-ThreadSanitized"
+      ]
+    },
+    {
+      "name": "Test-ThreadSanitizedDebug",
+      "description": "Debug test build with thread sanitizer enabled",
+      "inherits": [
+        "Test-Base",
+        "Default-ThreadSanitizedDebug"
+      ]
+    }
+  ]
+}

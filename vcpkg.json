@@ -1,0 +1,35 @@
+{
+  "name": "cppart",
+  "version": "1.0",
+  "description": "C++ async runtime based on stackless coroutines",
+  "dependencies": [
+    {
+      "name": "boost-intrusive",
+      "default-features": false
+    },
+    {
+      "name": "boost-circular-buffer",
+      "default-features": false
+    }
+  ],
+  "features": {
+    "tests": {
+      "description": "Build tests",
+      "dependencies": [
+        {
+          "name": "gtest",
+          "default-features": false
+        }
+      ]
+    },
+    "benchmarks": {
+      "description": "Build benchmarks",
+      "dependencies": [
+        {
+          "name": "benchmark",
+          "default-features": false
+        }
+      ]
+    }
+  }
+}
