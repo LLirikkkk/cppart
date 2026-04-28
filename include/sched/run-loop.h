@@ -1,5 +1,6 @@
 #pragma once
 
+#include "boost/intrusive/list.hpp"
 #include "resumable.h"
 #include "scheduler.h"
 
@@ -7,39 +8,39 @@
 
 namespace art::sched {
 
-    class RunLoop final : public IntrusiveListScheduler {
-    public:
-        RunLoop();
+class RunLoop final : public IntrusiveListScheduler {
+public:
+  RunLoop() = default;
 
-        ~RunLoop();
+  ~RunLoop() override = default;
 
-        // Non-copyable
-        RunLoop(const RunLoop&) = delete;
-        RunLoop& operator=(const RunLoop&) = delete;
+  RunLoop(const RunLoop&) = delete;
 
-        // Non-moveable
-        RunLoop(RunLoop&&) = delete;
-        RunLoop& operator=(RunLoop&&) = delete;
+  RunLoop& operator=(const RunLoop&) = delete;
 
-        // Run at most `limit` tasks from queue
-        // Returns number of completed tasks
-        std::size_t run_at_most(std::size_t limit);
+  RunLoop(RunLoop&&) = delete;
 
-        // Run next task if queue is not empty
-        // Returns true if task were completed
-        bool run_next();
+  RunLoop& operator=(RunLoop&&) = delete;
 
-        // Run tasks until queue is empty
-        // Returns number of completed tasks
-        // Post-condition: empty() == true
-        std::size_t run();
+  // Run at most `limit` tasks from queue
+  // Returns number of completed tasks
+  std::size_t run_at_most(std::size_t limit) noexcept;
 
-        void spawn(Resumable<IntrusiveListScheduler>& task) final;
+  // Run next task if queue is not empty
+  // Returns true if task were completed
+  bool run_next() noexcept;
 
-        bool empty() const noexcept;
+  // Run tasks until queue is empty
+  // Returns number of completed tasks
+  // Post-condition: empty() == true
+  std::size_t run() noexcept;
 
-    private:
-        /* Not implemented */
-    };
+  void spawn(Resumable<IntrusiveListScheduler>& task) noexcept override;
+
+  bool empty() const noexcept;
+
+private:
+  boost::intrusive::list<Resumable<IntrusiveListScheduler>> queue_;
+};
 
 } // namespace art::sched
