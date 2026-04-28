@@ -47,7 +47,7 @@ public:
   ///
   /// <b>Note</b>:
   /// - Task must not be currently queued in any scheduler.
-  /// - All tasks that were spawned must be eventually executed.
+  /// - All tasks that were spawned but not executed will be dropped without being resumed on destruction.
   void spawn(Resumable<IntrusiveListScheduler>& task) noexcept override;
 
   /// <b>Effects</b>: returns <code>true</code> if no tasks are queued.
