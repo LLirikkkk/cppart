@@ -27,7 +27,7 @@ public:
   RunLoop& operator=(RunLoop&&) = delete;
 
   /**
-   * @brief Runs at most <code>limit</code> queued tasks.
+   * @brief Runs at most limit queued tasks.
    * @param limit Number of maximum executed tasks.
    * @return Number of executed tasks.
    */
