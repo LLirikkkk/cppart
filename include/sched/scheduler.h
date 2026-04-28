@@ -13,7 +13,6 @@ public:
    * @brief Enqueues task for later execution.
    * @param task Task to enqueue.
    * @note Task must not be currently queued in any scheduler.
-   * @note All tasks that were spawned but not executed will be dropped without being resumed on destruction.
    */
   virtual void spawn(Resumable<IntrusiveListScheduler>& task) noexcept = 0;
 
