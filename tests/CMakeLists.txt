@@ -6,6 +6,8 @@ target_sources(
         PRIVATE
         coro/run-loop-test.cpp
         coro/thread-pool-test.cpp
+        sched/run-loop-test.cpp
+        sched/thread-pool-test.cpp
         utils/alloc-count.cpp
         utils/wait-group.cpp
 
