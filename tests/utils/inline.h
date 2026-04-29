@@ -8,7 +8,7 @@ class InlineScheduler {
   InlineScheduler() = default;
 
 public:
-  void spawn(art::sched::Resumable<InlineScheduler>& resumable) {
+  void spawn(sched::Resumable<InlineScheduler>& resumable) {
     resumable.resume(*this);
   }
 
@@ -18,4 +18,4 @@ public:
   }
 };
 
-} // namespace ct_test
+} // namespace art::test

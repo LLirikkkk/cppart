@@ -6,7 +6,6 @@ std::atomic<std::size_t> g_allocation_count;
 // Tsan defines its own allocator mocks
 #else
 
-
 #include <cstdlib>
 #include <new>
 

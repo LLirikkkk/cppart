@@ -8,12 +8,12 @@
 namespace art::test {
 
 template <typename F>
-class LambdaResumable : public art::sched::Resumable<ct::sched::IntrusiveListScheduler> {
+class LambdaResumable : public sched::Resumable<sched::IntrusiveListScheduler> {
 public:
   explicit LambdaResumable(F&& fn)
       : _fn(std::forward<F>(fn)) {}
 
-  void resume(art::sched::IntrusiveListScheduler& /*unused*/) noexcept final {
+  void resume(sched::IntrusiveListScheduler& /*unused*/) noexcept final {
     _fn();
     delete this;
   }
@@ -25,4 +25,4 @@ private:
 template <typename F>
 LambdaResumable(F&&) -> LambdaResumable<F>;
 
-} // namespace ct_test
+} // namespace art::test
