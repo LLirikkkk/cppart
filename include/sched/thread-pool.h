@@ -6,6 +6,8 @@
 
 #include <condition_variable>
 #include <cstddef>
+#include <mutex>
+#include <stop_token>
 #include <thread>
 #include <vector>
 
@@ -13,7 +15,7 @@ namespace art::sched {
 
 /**
  * @brief Fixed sized thread pool scheduler.
- * @note All tasks that were spawned but not executed will be dropped without being resumed on destruction.
+ * @note All tasks that were spawned will be executed if run() was called.
  */
 class ThreadPool final : public IntrusiveListScheduler {
 public:
@@ -36,6 +38,7 @@ public:
 
   /**
    * @brief Starts workers.
+   * @throws std::logic_error If called more than once.
    * @note Must be called at most once.
    * @note Thread-safety: not thread-safe and must not be called concurrently.
    */

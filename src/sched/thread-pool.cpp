@@ -1,5 +1,7 @@
 #include "sched/thread-pool.h"
 
+#include <stdexcept>
+
 namespace art::sched {
 
 ThreadPool::ThreadPool(const std::size_t threads) {
@@ -24,12 +26,12 @@ ThreadPool::~ThreadPool() {
   for (auto& worker : workers_) {
     worker.join();
   }
-
-  queue_.clear();
 }
 
 void ThreadPool::run() {
-  assert(workers_.empty());
+  if (!workers_.empty()) {
+    throw std::logic_error("run() called more than once");
+  }
 
   workers_.reserve(num_of_workers_);
   for (std::size_t i = 0; i < num_of_workers_; ++i) {
@@ -60,7 +62,7 @@ void ThreadPool::worker_loop(const std::stop_token& st) noexcept {
         return !queue_.empty() || st.stop_requested();
       });
 
-      if (st.stop_requested()) {
+      if (queue_.empty() && st.stop_requested()) {
         return;
       }
 
