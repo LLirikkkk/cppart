@@ -56,7 +56,7 @@ private:
 } // namespace detail
 
 /**
- * @brief Is a lighweight handle used as a return type of coroutines and access the promise.
+ * @brief Is a lightweight handle used as a return type of coroutines and access the promise.
  * @note Intended usage is to create <code>Coroutine</code> and schedule it via <code>go(...)</code>.
  * @note Coroutine frame destroys on completion.
  */
