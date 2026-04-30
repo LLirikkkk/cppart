@@ -10,8 +10,8 @@ namespace art::sched {
 class IntrusiveListScheduler {
 public:
   /**
-   * @brief Enqueues task for later execution.
-   * @param task Task to enqueue.
+   * @brief Schedules task for later execution.
+   * @param task Task to schedule.
    * @note Task must not be currently queued in any scheduler.
    */
   virtual void spawn(Resumable<IntrusiveListScheduler>& task) noexcept = 0;

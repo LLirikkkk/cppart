@@ -6,6 +6,9 @@ namespace art::coro {
 
 namespace detail {
 
+/**
+ * @brief Awaiter that suspends the current coroutine and passes the execution to the scheduler.
+ */
 struct YieldAwaiter {
   static bool await_ready() noexcept;
 
@@ -16,6 +19,10 @@ struct YieldAwaiter {
 
 } // namespace detail
 
+/**
+ * @brief Creates a <code>YieldAwaiter</code>.
+ * @return <code>YieldAwaiter</code> that suspends the current coroutine and passes the execution to the scheduler.
+ */
 detail::YieldAwaiter yield() noexcept;
 
 } // namespace art::coro

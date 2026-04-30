@@ -11,6 +11,9 @@ class Coroutine;
 
 namespace detail {
 
+/**
+ * @brief RAII wrapper for currently running coroutine.
+ */
 class CurrentCoroutineGuard {
 public:
   explicit CurrentCoroutineGuard(Coroutine& coro) noexcept;
@@ -20,18 +23,29 @@ private:
   Coroutine* prev_ = nullptr;
 };
 
+/**
+ * @brief Type-erased set of functions used by <code>ExecutionContext</code>.
+ */
 struct Descriptors {
   using SpawnToSchedulerF = void (*)(void* scheduler, Coroutine coro) noexcept;
 
   SpawnToSchedulerF spawn_to_scheduler_ = nullptr;
 };
 
+/**
+ * @brief Execution context of a running coroutine. Stores info about current execution.
+ */
 class ExecutionContext {
 public:
   ExecutionContext() = default;
   ExecutionContext(void* scheduler, Descriptors descriptors) noexcept;
   ~ExecutionContext() = default;
 
+  /**
+   * @brief Schedules the provided coroutine on the stored scheduler.
+   * @param coro Coroutine to schedule.
+   * @pre The context must have been initialized.
+   */
   void SpawnToScheduler(Coroutine coro) const noexcept;
 
 private:
@@ -41,6 +55,11 @@ private:
 
 } // namespace detail
 
+/**
+ * @brief Is a lighweight handle used as a return type of coroutines and access the promise.
+ * @note Intended usage is to create <code>Coroutine</code> and schedule it via <code>go(...)</code>.
+ * @note Coroutine frame destroys on completion.
+ */
 class Coroutine {
 private:
   struct PromiseType : public sched::Resumable<sched::IntrusiveListScheduler> {
@@ -54,11 +73,22 @@ private:
 
     static void unhandled_exception() noexcept;
 
+    /**
+     * @brief Executes one step of the coroutine on the provided scheduler.
+     * @param scheduler Scheduler which this task was executed on.
+     */
     void resume(sched::IntrusiveListScheduler& scheduler) noexcept override;
 
+    /**
+     * @brief Requests to reschedule this coroutine after it suspends.
+     */
     void request_reschedule() noexcept;
 
   private:
+    /**
+     * @brief Checks and resets the <code>reschedule_requested_</code>.
+     * @return <code>true</code> if rescheduling was requested.
+     */
     bool check_reschedule_requested() noexcept;
 
     template <typename Scheduler>
@@ -116,8 +146,15 @@ public:
   Coroutine(Coroutine&& other) noexcept;
   Coroutine& operator=(Coroutine&& other) noexcept;
 
+  /**
+   * @return The promise stored inside the coroutine frame.
+   */
   promise_type& promise() const noexcept;
 
+  /**
+   * @return The currently running coroutine on this thread.
+   * @note Calling this outside of coroutine execution is undefined behavior.
+   */
   static Coroutine& current() noexcept;
 
 private:

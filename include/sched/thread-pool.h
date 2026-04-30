@@ -45,8 +45,8 @@ public:
   void run();
 
   /**
-   * @brief Enqueues task for later execution.
-   * @param task Task to enqueue.
+   * @brief Schedules task for later execution.
+   * @param task Task to schedule.
    * @note Task must not be currently queued in any scheduler.
    * @note Thread-safety: thread-safe.
    */

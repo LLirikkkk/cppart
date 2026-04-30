@@ -8,7 +8,7 @@ class IntrusiveListScheduler;
 
 /**
  * @brief Interface for unit of work that can be resumed by a scheduler.
- * @tparam Scheduler Type of scheduler which this unit can be enqueued on.
+ * @tparam Scheduler Type of scheduler which this unit can be scheduled on.
  */
 template <typename Scheduler>
 class Resumable {
