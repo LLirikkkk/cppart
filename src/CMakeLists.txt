@@ -17,7 +17,6 @@ target_sources(
 
         PRIVATE
         coro/coroutine.cpp
-        coro/go.cpp
         coro/yield.cpp
         sched/run-loop.cpp
         sched/thread-pool.cpp
