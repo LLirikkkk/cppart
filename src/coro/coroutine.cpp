@@ -48,6 +48,17 @@ void Coroutine::PromiseType::resume(sched::IntrusiveListScheduler& scheduler) no
   resume_impl(scheduler);
 }
 
+void Coroutine::PromiseType::request_reschedule() noexcept {
+  reschedule_requested_ = true;
+}
+
+bool Coroutine::PromiseType::check_reschedule_requested() noexcept {
+  bool res = reschedule_requested_;
+  reschedule_requested_ = false;
+
+  return res;
+}
+
 detail::ExecutionContext& Coroutine::PromiseType::get_execution_context() noexcept {
   return ctx_;
 }
@@ -74,10 +85,6 @@ Coroutine::promise_type& Coroutine::promise() const noexcept {
 
 Coroutine& Coroutine::current() noexcept {
   return *curr_;
-}
-
-detail::ExecutionContext& Coroutine::get_execution_context() const noexcept {
-  return promise().get_execution_context();
 }
 
 } // namespace art::coro

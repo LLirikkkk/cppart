@@ -56,7 +56,11 @@ private:
 
     void resume(sched::IntrusiveListScheduler& scheduler) noexcept override;
 
+    void request_reschedule() noexcept;
+
   private:
+    bool check_reschedule_requested() noexcept;
+
     template <typename Scheduler>
     void set_execution_context(Scheduler& scheduler) noexcept {
       ctx_ = detail::ExecutionContext(
@@ -81,12 +85,21 @@ private:
       handle.resume();
       if (handle.done()) {
         handle.destroy();
+      } else if (check_reschedule_requested()) {
+        scheduler.spawn(*this);
       }
     }
 
     detail::ExecutionContext ctx_;
+    bool reschedule_requested_ = false;
 
     friend class Coroutine;
+
+    template <typename Scheduler, typename Routine>
+    friend void go(Scheduler&, const Routine&);
+
+    template <typename Routine>
+    friend void go(const Routine&);
   };
 
 public:
@@ -108,19 +121,11 @@ public:
   static Coroutine& current() noexcept;
 
 private:
-  detail::ExecutionContext& get_execution_context() const noexcept;
-
   std::coroutine_handle<promise_type> handle_ = nullptr;
 
   inline static thread_local Coroutine* curr_ = nullptr;
 
   friend class detail::CurrentCoroutineGuard;
-
-  template <typename Scheduler, typename Routine>
-  friend void go(Scheduler&, const Routine&);
-
-  template <typename Routine>
-  friend void go(const Routine&);
 };
 
 } // namespace art::coro
