@@ -1,49 +1,126 @@
 #pragma once
 
+#include "sched/resumable.h"
+#include "sched/scheduler.h"
+
 #include <coroutine>
 
 namespace art::coro {
 
-    class Coroutine {
-    private:
-        struct PromiseType {
-            Coroutine get_return_object();
+class Coroutine;
 
-            auto initial_suspend() noexcept;
+namespace detail {
 
-            auto final_suspend() noexcept;
+class CurrentCoroutineGuard {
+public:
+  explicit CurrentCoroutineGuard(Coroutine& coro) noexcept;
+  ~CurrentCoroutineGuard();
 
-            void return_void();
+private:
+  Coroutine* prev_ = nullptr;
+};
 
-            void unhandled_exception();
+struct Descriptors {
+  using SpawnToSchedulerF = void (*)(void* scheduler, Coroutine coro) noexcept;
 
-        private:
-            /*Not implemented*/
-        };
+  SpawnToSchedulerF spawn_to_scheduler_ = nullptr;
+};
 
-    public:
-        using promise_type = PromiseType;
+class ExecutionContext {
+public:
+  ExecutionContext() = default;
+  ExecutionContext(void* scheduler, Descriptors descriptors) noexcept;
+  ~ExecutionContext() = default;
 
-        explicit Coroutine(std::coroutine_handle<promise_type> h);
+  void SpawnToScheduler(Coroutine coro) const noexcept;
 
-        Coroutine();
-        ~Coroutine();
+private:
+  void* scheduler_ = nullptr;
+  Descriptors descriptors_;
+};
 
-        // Non-copyable
-        Coroutine(const Coroutine&) = delete;
-        Coroutine& operator=(const Coroutine&) = delete;
+} // namespace detail
 
-        // Moveable
-        Coroutine(Coroutine&& other) noexcept = default;
-        Coroutine& operator=(Coroutine&& other) noexcept = default;
+class Coroutine {
+private:
+  struct PromiseType : public sched::Resumable<sched::IntrusiveListScheduler> {
+    Coroutine get_return_object();
 
-    public:
-        promise_type& promise();
+    static std::suspend_always initial_suspend() noexcept;
 
-        static Coroutine& current();
+    static std::suspend_always final_suspend() noexcept;
 
-    private:
-        /*Not implemented*/
-    };
+    static void return_void() noexcept;
+
+    static void unhandled_exception() noexcept;
+
+    void resume(sched::IntrusiveListScheduler& scheduler) noexcept override;
+
+  private:
+    template <typename Scheduler>
+    void set_execution_context(Scheduler& scheduler) noexcept {
+      ctx_ = detail::ExecutionContext(
+          &scheduler,
+          {.spawn_to_scheduler_ = [](void* scheduler_ctx, Coroutine coro) noexcept {
+            static_cast<Scheduler*>(scheduler_ctx)->spawn(coro.promise());
+          }}
+      );
+    }
+
+    detail::ExecutionContext& get_execution_context() noexcept;
+
+    template <typename Scheduler>
+    void resume_impl(Scheduler& scheduler) noexcept {
+      const auto handle = std::coroutine_handle<promise_type>::from_promise(*this);
+
+      Coroutine curr_coro(handle);
+      detail::CurrentCoroutineGuard guard(curr_coro);
+
+      set_execution_context(scheduler);
+
+      handle.resume();
+      if (handle.done()) {
+        handle.destroy();
+      }
+    }
+
+    detail::ExecutionContext ctx_;
+
+    friend class Coroutine;
+  };
+
+public:
+  using promise_type = PromiseType;
+
+  explicit Coroutine(std::coroutine_handle<promise_type> h);
+
+  Coroutine() = default;
+  ~Coroutine() = default;
+
+  Coroutine(const Coroutine&) = delete;
+  Coroutine& operator=(const Coroutine&) = delete;
+
+  Coroutine(Coroutine&& other) noexcept;
+  Coroutine& operator=(Coroutine&& other) noexcept;
+
+  promise_type& promise() const noexcept;
+
+  static Coroutine& current() noexcept;
+
+private:
+  detail::ExecutionContext& get_execution_context() const noexcept;
+
+  std::coroutine_handle<promise_type> handle_ = nullptr;
+
+  inline static thread_local Coroutine* curr_ = nullptr;
+
+  friend class detail::CurrentCoroutineGuard;
+
+  template <typename Scheduler, typename Routine>
+  friend void go(Scheduler&, const Routine&);
+
+  template <typename Routine>
+  friend void go(const Routine&);
+};
 
 } // namespace art::coro
