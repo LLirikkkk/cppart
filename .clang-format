@@ -70,7 +70,7 @@ ForEachMacros:
   - foreach
   - Q_FOREACH
   - BOOST_FOREACH
-IfMacros: []
+IfMacros: [ ]
 IncludeBlocks: Regroup
 IncludeCategories:
   # Internal project headers
@@ -111,11 +111,10 @@ PenaltyBreakOpenParenthesis: 19
 PenaltyBreakString: 1000
 PenaltyBreakTemplateDeclaration: 10
 PenaltyExcessCharacter: 1000000
-# PenaltyIndentedWhitespace: IDK. If you know the appropriate value, create PR.
 PenaltyReturnTypeOnItsOwnLine: 60
 PointerAlignment: Left
 QualifierAlignment: Custom
-QualifierOrder: ['friend', 'inline', 'static', 'constexpr', 'const', 'volatile', 'type']
+QualifierOrder: [ 'friend', 'inline', 'static', 'constexpr', 'const', 'volatile', 'type' ]
 ReferenceAlignment: Pointer
 ReflowComments: true
 RemoveBracesLLVM: false
@@ -157,13 +156,12 @@ SpacesInLineCommentPrefix:
   Maximum: 1
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-StatementAttributeLikeMacros: ['emit']
+StatementAttributeLikeMacros: [ 'emit' ]
 StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION
 TabWidth: 4
 UseCRLF: false
 UseTab: Never
-# TODO: Uncomment when clang-format-20 is available
-# WrapNamespaceBodyWithEmptyLines: Always
+WrapNamespaceBodyWithEmptyLines: Always
 ...
