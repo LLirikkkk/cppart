@@ -10,6 +10,8 @@ target_sources(
         sched/thread-pool-test.cpp
         sync/event-test.cpp
         sync/event-tp-test.cpp
+        sync/mutex-test.cpp
+        sync/mutex-tp-test.cpp
         utils/alloc-count.cpp
         utils/wait-group.cpp
 
