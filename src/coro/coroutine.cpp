@@ -20,48 +20,11 @@ ExecutionContext::ExecutionContext(void* scheduler, Descriptors descriptors) noe
     : scheduler_(scheduler)
     , descriptors_(descriptors) {}
 
-void ExecutionContext::SpawnToScheduler(Coroutine coro) const noexcept {
-    descriptors_.spawn_to_scheduler_(scheduler_, std::move(coro));
+void ExecutionContext::spawn_to_scheduler(PromiseType& promise) const noexcept {
+    descriptors_.spawn_to_scheduler_(scheduler_, promise);
 }
 
 } // namespace detail
-
-Coroutine Coroutine::PromiseType::get_return_object() {
-    return Coroutine(std::coroutine_handle<promise_type>::from_promise(*this));
-}
-
-std::suspend_always Coroutine::PromiseType::initial_suspend() noexcept {
-    return {};
-}
-
-std::suspend_always Coroutine::PromiseType::final_suspend() noexcept {
-    return {};
-}
-
-void Coroutine::PromiseType::return_void() noexcept {}
-
-void Coroutine::PromiseType::unhandled_exception() noexcept {
-    std::terminate();
-}
-
-void Coroutine::PromiseType::resume(sched::IntrusiveListScheduler& scheduler) noexcept {
-    resume_impl(scheduler);
-}
-
-void Coroutine::PromiseType::yield() noexcept {
-    yielded_ = true;
-}
-
-bool Coroutine::PromiseType::is_yielded() noexcept {
-    bool res = yielded_;
-    yielded_ = false;
-
-    return res;
-}
-
-detail::ExecutionContext& Coroutine::PromiseType::get_execution_context() noexcept {
-    return ctx_;
-}
 
 Coroutine::Coroutine(const std::coroutine_handle<promise_type> h)
     : handle_(h) {}
@@ -85,6 +48,53 @@ Coroutine::promise_type& Coroutine::promise() const noexcept {
 
 Coroutine& Coroutine::current() noexcept {
     return *curr_;
+}
+
+Coroutine PromiseType::get_return_object() {
+    return Coroutine(std::coroutine_handle<PromiseType>::from_promise(*this));
+}
+
+std::suspend_always PromiseType::initial_suspend() noexcept {
+    return {};
+}
+
+std::suspend_always PromiseType::final_suspend() noexcept {
+    return {};
+}
+
+void PromiseType::return_void() noexcept {}
+
+void PromiseType::unhandled_exception() noexcept {
+    std::terminate();
+}
+
+void PromiseType::resume(sched::IntrusiveListScheduler& scheduler) noexcept {
+    resume_impl(scheduler);
+}
+
+void PromiseType::yield() noexcept {
+    yielded_ = true;
+}
+
+void PromiseType::reschedule() noexcept {
+    if (!reschedule_requested_.exchange(true)) {
+        return;
+    }
+
+    reschedule_requested_.store(false);
+
+    ctx_.spawn_to_scheduler(*this);
+}
+
+bool PromiseType::is_yielded() noexcept {
+    bool res = yielded_;
+    yielded_ = false;
+
+    return res;
+}
+
+detail::ExecutionContext& PromiseType::get_execution_context() noexcept {
+    return ctx_;
 }
 
 } // namespace art::coro

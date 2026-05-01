@@ -25,7 +25,7 @@ void go(Scheduler& scheduler, const Routine& routine) {
 template <typename Routine>
 void go(const Routine& routine) {
     const auto& curr_coro = Coroutine::current();
-    curr_coro.promise().get_execution_context().SpawnToScheduler(routine());
+    curr_coro.promise().get_execution_context().spawn_to_scheduler(routine().promise());
 }
 
 } // namespace art::coro

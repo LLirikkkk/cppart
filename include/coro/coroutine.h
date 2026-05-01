@@ -3,11 +3,13 @@
 #include "sched/resumable.h"
 #include "sched/scheduler.h"
 
+#include <atomic>
 #include <coroutine>
 
 namespace art::coro {
 
 class Coroutine;
+struct PromiseType;
 
 namespace detail {
 
@@ -27,7 +29,7 @@ class CurrentCoroutineGuard {
  * @brief Type-erased set of functions used by <code>ExecutionContext</code>.
  */
 struct Descriptors {
-    using SpawnToSchedulerF = void (*)(void* scheduler, Coroutine coro) noexcept;
+    using SpawnToSchedulerF = void (*)(void* scheduler, PromiseType& promise) noexcept;
 
     SpawnToSchedulerF spawn_to_scheduler_ = nullptr;
 };
@@ -43,10 +45,10 @@ class ExecutionContext {
 
     /**
      * @brief Schedules the provided coroutine on the stored scheduler.
-     * @param coro Coroutine to schedule.
+     * @param promise to schedule.
      * @pre The context must have been initialized.
      */
-    void SpawnToScheduler(Coroutine coro) const noexcept;
+    void spawn_to_scheduler(PromiseType& promise) const noexcept;
 
   private:
     void* scheduler_ = nullptr;
@@ -61,77 +63,6 @@ class ExecutionContext {
  * @note Coroutine frame destroys on completion.
  */
 class Coroutine {
-  private:
-    struct PromiseType : public sched::Resumable<sched::IntrusiveListScheduler> {
-        Coroutine get_return_object();
-
-        static std::suspend_always initial_suspend() noexcept;
-
-        static std::suspend_always final_suspend() noexcept;
-
-        static void return_void() noexcept;
-
-        static void unhandled_exception() noexcept;
-
-        /**
-         * @brief Executes one step of the coroutine on the provided scheduler.
-         * @param scheduler Scheduler which this task was executed on.
-         */
-        void resume(sched::IntrusiveListScheduler& scheduler) noexcept override;
-
-        /**
-         * @brief Requests yield.
-         */
-        void yield() noexcept;
-
-      private:
-        /**
-         * @brief Checks and resets the <code>yielded_</code>.
-         * @return <code>true</code> if yield was requested.
-         */
-        bool is_yielded() noexcept;
-
-        template <typename Scheduler>
-        void set_execution_context(Scheduler& scheduler) noexcept {
-            ctx_ = detail::ExecutionContext(
-                &scheduler,
-                {.spawn_to_scheduler_ = [](void* scheduler_ctx, Coroutine coro) noexcept {
-                    static_cast<Scheduler*>(scheduler_ctx)->spawn(coro.promise());
-                }}
-            );
-        }
-
-        detail::ExecutionContext& get_execution_context() noexcept;
-
-        template <typename Scheduler>
-        void resume_impl(Scheduler& scheduler) noexcept {
-            const auto handle = std::coroutine_handle<promise_type>::from_promise(*this);
-
-            Coroutine curr_coro(handle);
-            detail::CurrentCoroutineGuard guard(curr_coro);
-
-            set_execution_context(scheduler);
-
-            handle.resume();
-            if (handle.done()) {
-                handle.destroy();
-            } else if (is_yielded()) {
-                scheduler.spawn(*this);
-            }
-        }
-
-        detail::ExecutionContext ctx_;
-        bool yielded_ = false;
-
-        friend class Coroutine;
-
-        template <typename Scheduler, typename Routine>
-        friend void go(Scheduler&, const Routine&);
-
-        template <typename Routine>
-        friend void go(const Routine&);
-    };
-
   public:
     using promise_type = PromiseType;
 
@@ -163,6 +94,81 @@ class Coroutine {
     inline static thread_local Coroutine* curr_ = nullptr;
 
     friend class detail::CurrentCoroutineGuard;
+};
+
+struct PromiseType : public sched::Resumable<sched::IntrusiveListScheduler> {
+    Coroutine get_return_object();
+
+    static std::suspend_always initial_suspend() noexcept;
+
+    static std::suspend_always final_suspend() noexcept;
+
+    static void return_void() noexcept;
+
+    static void unhandled_exception() noexcept;
+
+    /**
+     * @brief Executes one step of the coroutine on the provided scheduler.
+     * @param scheduler Scheduler which this task was executed on.
+     */
+    void resume(sched::IntrusiveListScheduler& scheduler) noexcept override;
+
+    /**
+     * @brief Requests yield.
+     */
+    void yield() noexcept;
+
+    void reschedule() noexcept;
+
+  private:
+    /**
+     * @brief Checks and resets the <code>yielded_</code>.
+     * @return <code>true</code> if yield was requested.
+     */
+    bool is_yielded() noexcept;
+
+    template <typename Scheduler>
+    void set_execution_context(Scheduler& scheduler) noexcept {
+        ctx_ = detail::ExecutionContext(
+            &scheduler,
+            {.spawn_to_scheduler_ = [](void* scheduler_ctx, PromiseType& promise) noexcept {
+                static_cast<Scheduler*>(scheduler_ctx)->spawn(promise);
+            }}
+        );
+    }
+
+    detail::ExecutionContext& get_execution_context() noexcept;
+
+    template <typename Scheduler>
+    void resume_impl(Scheduler& scheduler) noexcept {
+        const auto handle = std::coroutine_handle<PromiseType>::from_promise(*this);
+
+        Coroutine curr_coro(handle);
+        detail::CurrentCoroutineGuard guard(curr_coro);
+
+        set_execution_context(scheduler);
+
+        handle.resume();
+        if (handle.done()) {
+            handle.destroy();
+        } else if (is_yielded()) {
+            scheduler.spawn(*this);
+        } else {
+            reschedule();
+        }
+    }
+
+    detail::ExecutionContext ctx_;
+    bool yielded_ = false;
+    std::atomic<bool> reschedule_requested_ = false;
+
+    friend class Coroutine;
+
+    template <typename Scheduler, typename Routine>
+    friend void go(Scheduler&, const Routine&);
+
+    template <typename Routine>
+    friend void go(const Routine&);
 };
 
 } // namespace art::coro
