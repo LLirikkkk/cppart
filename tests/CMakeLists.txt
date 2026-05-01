@@ -8,6 +8,8 @@ target_sources(
         coro/thread-pool-test.cpp
         sched/run-loop-test.cpp
         sched/thread-pool-test.cpp
+        sync/event-test.cpp
+        sync/event-tp-test.cpp
         utils/alloc-count.cpp
         utils/wait-group.cpp
 
