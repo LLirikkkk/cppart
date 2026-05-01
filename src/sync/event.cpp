@@ -1,0 +1,51 @@
+#include "sync/event.h"
+
+namespace art::sync {
+
+detail::EventAwaiter Event::emitted_;
+
+namespace detail {
+
+EventAwaiter::EventAwaiter(Event& event) noexcept
+    : event_(&event) {}
+
+bool EventAwaiter::await_ready() const noexcept {
+    return event_->emitted();
+}
+
+bool EventAwaiter::await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept {
+    handle_ = handle;
+    EventAwaiter* head_old = event_->head_.load();
+    do {
+        if (head_old == &Event::emitted_) {
+            return false;
+        }
+
+        next_ = head_old;
+    } while (!event_->head_.compare_exchange_weak(head_old, this));
+
+    return true;
+}
+
+void EventAwaiter::await_resume() noexcept {}
+
+} // namespace detail
+
+void Event::emit() noexcept {
+    const detail::EventAwaiter* head_old = head_.exchange(&emitted_);
+    while (head_old != nullptr) {
+        const detail::EventAwaiter* next = head_old->next_;
+        head_old->handle_.promise().reschedule();
+        head_old = next;
+    }
+}
+
+bool Event::emitted() const noexcept {
+    return head_.load() == &emitted_;
+}
+
+detail::EventAwaiter Event::wait() noexcept {
+    return detail::EventAwaiter(*this);
+}
+
+} // namespace art::sync
