@@ -5,73 +5,73 @@
 namespace art::sched {
 
 ThreadPool::ThreadPool(const std::size_t threads) {
-  if (threads == 0) {
-    throw std::invalid_argument("Number of threads must be positive");
-  }
+    if (threads == 0) {
+        throw std::invalid_argument("Number of threads must be positive");
+    }
 
-  num_of_workers_ = threads;
+    num_of_workers_ = threads;
 }
 
 ThreadPool::~ThreadPool() {
-  for (auto& worker : workers_) {
-    worker.request_stop();
-  }
+    for (auto& worker : workers_) {
+        worker.request_stop();
+    }
 
-  {
-    std::unique_lock lock(mutex_);
+    {
+        std::unique_lock lock(mutex_);
 
-    cv_.notify_all();
-  }
+        cv_.notify_all();
+    }
 
-  for (auto& worker : workers_) {
-    worker.join();
-  }
+    for (auto& worker : workers_) {
+        worker.join();
+    }
 }
 
 void ThreadPool::run() {
-  if (!workers_.empty()) {
-    throw std::logic_error("run() called more than once");
-  }
+    if (!workers_.empty()) {
+        throw std::logic_error("run() called more than once");
+    }
 
-  workers_.reserve(num_of_workers_);
-  for (std::size_t i = 0; i < num_of_workers_; ++i) {
-    workers_.emplace_back([this](const std::stop_token& st) {
-      worker_loop(st);
-    });
-  }
+    workers_.reserve(num_of_workers_);
+    for (std::size_t i = 0; i < num_of_workers_; ++i) {
+        workers_.emplace_back([this](const std::stop_token& st) {
+            worker_loop(st);
+        });
+    }
 }
 
 void ThreadPool::spawn(Resumable<IntrusiveListScheduler>& task) noexcept {
-  {
-    std::unique_lock lock(mutex_);
+    {
+        std::unique_lock lock(mutex_);
 
-    queue_.push_back(task);
-  }
+        queue_.push_back(task);
+    }
 
-  cv_.notify_one();
+    cv_.notify_one();
 }
 
 void ThreadPool::worker_loop(const std::stop_token& st) noexcept {
-  while (true) {
-    Resumable<IntrusiveListScheduler>* task = nullptr;
+    while (true) {
+        Resumable<IntrusiveListScheduler>* task = nullptr;
 
-    {
-      std::unique_lock lock(mutex_);
+        {
+            std::unique_lock lock(mutex_);
 
-      cv_.wait(lock, [this, &st] {
-        return !queue_.empty() || st.stop_requested();
-      });
+            cv_.wait(lock, [this, &st] {
+                return !queue_.empty() || st.stop_requested();
+            });
 
-      if (queue_.empty() && st.stop_requested()) {
-        return;
-      }
+            if (queue_.empty() && st.stop_requested()) {
+                return;
+            }
 
-      task = &queue_.front();
-      queue_.pop_front();
+            task = &queue_.front();
+            queue_.pop_front();
+        }
+
+        task->resume(*this);
     }
-
-    task->resume(*this);
-  }
 }
 
 } // namespace art::sched

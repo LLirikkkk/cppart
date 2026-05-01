@@ -2,17 +2,17 @@
 
 namespace art::sync {
 
-    // Must preserve FIFO ordering
-    class Mutex {
-    public:
-        bool try_lock() noexcept;
+// Must preserve FIFO ordering
+class Mutex {
+  public:
+    bool try_lock() noexcept;
 
-        auto lock() noexcept;
+    auto lock() noexcept;
 
-        auto unlock() noexcept;
+    auto unlock() noexcept;
 
-    private:
-        /* Not implemented */
-    };
+  private:
+    /* Not implemented */
+};
 
-} // namespace ct::sync
+} // namespace art::sync

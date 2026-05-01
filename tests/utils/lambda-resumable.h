@@ -9,17 +9,17 @@ namespace art::test {
 
 template <typename F>
 class LambdaResumable : public sched::Resumable<sched::IntrusiveListScheduler> {
-public:
-  explicit LambdaResumable(F&& fn)
-      : _fn(std::forward<F>(fn)) {}
+  public:
+    explicit LambdaResumable(F&& fn)
+        : _fn(std::forward<F>(fn)) {}
 
-  void resume(sched::IntrusiveListScheduler& /*unused*/) noexcept final {
-    _fn();
-    delete this;
-  }
+    void resume(sched::IntrusiveListScheduler& /*unused*/) noexcept final {
+        _fn();
+        delete this;
+    }
 
-private:
-  std::decay_t<F> _fn;
+  private:
+    std::decay_t<F> _fn;
 };
 
 template <typename F>

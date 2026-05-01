@@ -3,22 +3,22 @@
 namespace art::test {
 
 void WaitGroup::add(std::size_t count) {
-  std::lock_guard guard{_lock};
-  _work += count;
+    std::lock_guard guard{_lock};
+    _work += count;
 }
 
 void WaitGroup::done() {
-  std::lock_guard guard{_lock};
-  if (--_work == 0) {
-    _zero_work_cv.notify_all();
-  }
+    std::lock_guard guard{_lock};
+    if (--_work == 0) {
+        _zero_work_cv.notify_all();
+    }
 }
 
 void WaitGroup::wait() {
-  std::unique_lock guard{_lock};
-  _zero_work_cv.wait(guard, [this] {
-    return _work == 0;
-  });
+    std::unique_lock guard{_lock};
+    _zero_work_cv.wait(guard, [this] {
+        return _work == 0;
+    });
 }
 
 } // namespace art::test

@@ -13,58 +13,58 @@ namespace art::sched {
  * @note All tasks that were spawned but not executed will be dropped without being resumed on destruction.
  */
 class RunLoop final : public IntrusiveListScheduler {
-public:
-  RunLoop() = default;
+  public:
+    RunLoop() = default;
 
-  ~RunLoop() override = default;
+    ~RunLoop() override = default;
 
-  RunLoop(const RunLoop&) = delete;
+    RunLoop(const RunLoop&) = delete;
 
-  RunLoop& operator=(const RunLoop&) = delete;
+    RunLoop& operator=(const RunLoop&) = delete;
 
-  RunLoop(RunLoop&&) = delete;
+    RunLoop(RunLoop&&) = delete;
 
-  RunLoop& operator=(RunLoop&&) = delete;
+    RunLoop& operator=(RunLoop&&) = delete;
 
-  /**
-   * @brief Runs at most limit queued tasks.
-   * @param limit Number of maximum executed tasks.
-   * @return Number of executed tasks.
-   * @note Thread-safety: not thread-safe and must not be called concurrently.
-   */
-  std::size_t run_at_most(std::size_t limit) noexcept;
+    /**
+     * @brief Runs at most limit queued tasks.
+     * @param limit Number of maximum executed tasks.
+     * @return Number of executed tasks.
+     * @note Thread-safety: not thread-safe and must not be called concurrently.
+     */
+    std::size_t run_at_most(std::size_t limit) noexcept;
 
-  /**
-   * @brief Runs one queued task if available.
-   * @return <code>true</code> if task was executed, <code>false</code> if the queue was empty.
-   * @note Thread-safety: not thread-safe and must not be called concurrently.
-   */
-  bool run_next() noexcept;
+    /**
+     * @brief Runs one queued task if available.
+     * @return <code>true</code> if task was executed, <code>false</code> if the queue was empty.
+     * @note Thread-safety: not thread-safe and must not be called concurrently.
+     */
+    bool run_next() noexcept;
 
-  /**
-   * @brief Runs tasks until queue is empty.
-   * @return Number of executed tasks.
-   * @note Thread-safety: not thread-safe and must not be called concurrently.
-   */
-  std::size_t run() noexcept;
+    /**
+     * @brief Runs tasks until queue is empty.
+     * @return Number of executed tasks.
+     * @note Thread-safety: not thread-safe and must not be called concurrently.
+     */
+    std::size_t run() noexcept;
 
-  /**
-   * @brief Schedules task for later execution.
-   * @param task Task to schedule.
-   * @note Task must not be currently queued in any scheduler.
-   * @note Thread-safety: not thread-safe and must not be called concurrently.
-   */
-  void spawn(Resumable<IntrusiveListScheduler>& task) noexcept override;
+    /**
+     * @brief Schedules task for later execution.
+     * @param task Task to schedule.
+     * @note Task must not be currently queued in any scheduler.
+     * @note Thread-safety: not thread-safe and must not be called concurrently.
+     */
+    void spawn(Resumable<IntrusiveListScheduler>& task) noexcept override;
 
-  /**
-   * @brief checks if no tasks are queued.
-   * @return <code>true</code> if no tasks are queued.
-   * @note Thread-safety: not thread-safe and must not be called concurrently.
-   */
-  bool empty() const noexcept;
+    /**
+     * @brief checks if no tasks are queued.
+     * @return <code>true</code> if no tasks are queued.
+     * @note Thread-safety: not thread-safe and must not be called concurrently.
+     */
+    bool empty() const noexcept;
 
-private:
-  boost::intrusive::list<Resumable<IntrusiveListScheduler>> queue_;
+  private:
+    boost::intrusive::list<Resumable<IntrusiveListScheduler>> queue_;
 };
 
 } // namespace art::sched

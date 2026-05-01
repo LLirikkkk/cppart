@@ -10,11 +10,11 @@ namespace detail {
  * @brief Awaiter that suspends the current coroutine and passes the execution to the scheduler.
  */
 struct YieldAwaiter {
-  static bool await_ready() noexcept;
+    static bool await_ready() noexcept;
 
-  static void await_suspend(std::coroutine_handle<Coroutine::promise_type> handle) noexcept;
+    static void await_suspend(std::coroutine_handle<Coroutine::promise_type> handle) noexcept;
 
-  static void await_resume() noexcept;
+    static void await_resume() noexcept;
 };
 
 } // namespace detail

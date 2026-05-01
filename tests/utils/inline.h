@@ -5,17 +5,17 @@
 namespace art::test {
 
 class InlineScheduler {
-  InlineScheduler() = default;
+    InlineScheduler() = default;
 
-public:
-  void spawn(sched::Resumable<InlineScheduler>& resumable) {
-    resumable.resume(*this);
-  }
+  public:
+    void spawn(sched::Resumable<InlineScheduler>& resumable) {
+        resumable.resume(*this);
+    }
 
-  static InlineScheduler& instance() {
-    static InlineScheduler sched;
-    return sched;
-  }
+    static InlineScheduler& instance() {
+        static InlineScheduler sched;
+        return sched;
+    }
 };
 
 } // namespace art::test

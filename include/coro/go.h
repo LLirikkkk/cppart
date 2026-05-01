@@ -13,7 +13,7 @@ namespace art::coro {
  */
 template <typename Scheduler, typename Routine>
 void go(Scheduler& scheduler, const Routine& routine) {
-  scheduler.spawn(routine().promise());
+    scheduler.spawn(routine().promise());
 }
 
 /**
@@ -24,8 +24,8 @@ void go(Scheduler& scheduler, const Routine& routine) {
  */
 template <typename Routine>
 void go(const Routine& routine) {
-  const auto& curr_coro = Coroutine::current();
-  curr_coro.promise().get_execution_context().SpawnToScheduler(routine());
+    const auto& curr_coro = Coroutine::current();
+    curr_coro.promise().get_execution_context().SpawnToScheduler(routine());
 }
 
 } // namespace art::coro

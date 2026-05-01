@@ -15,42 +15,42 @@ namespace detail {
  * @brief RAII wrapper for currently running coroutine.
  */
 class CurrentCoroutineGuard {
-public:
-  explicit CurrentCoroutineGuard(Coroutine& coro) noexcept;
-  ~CurrentCoroutineGuard();
+  public:
+    explicit CurrentCoroutineGuard(Coroutine& coro) noexcept;
+    ~CurrentCoroutineGuard();
 
-private:
-  Coroutine* prev_ = nullptr;
+  private:
+    Coroutine* prev_ = nullptr;
 };
 
 /**
  * @brief Type-erased set of functions used by <code>ExecutionContext</code>.
  */
 struct Descriptors {
-  using SpawnToSchedulerF = void (*)(void* scheduler, Coroutine coro) noexcept;
+    using SpawnToSchedulerF = void (*)(void* scheduler, Coroutine coro) noexcept;
 
-  SpawnToSchedulerF spawn_to_scheduler_ = nullptr;
+    SpawnToSchedulerF spawn_to_scheduler_ = nullptr;
 };
 
 /**
  * @brief Execution context of a running coroutine. Stores info about current execution.
  */
 class ExecutionContext {
-public:
-  ExecutionContext() = default;
-  ExecutionContext(void* scheduler, Descriptors descriptors) noexcept;
-  ~ExecutionContext() = default;
+  public:
+    ExecutionContext() = default;
+    ExecutionContext(void* scheduler, Descriptors descriptors) noexcept;
+    ~ExecutionContext() = default;
 
-  /**
-   * @brief Schedules the provided coroutine on the stored scheduler.
-   * @param coro Coroutine to schedule.
-   * @pre The context must have been initialized.
-   */
-  void SpawnToScheduler(Coroutine coro) const noexcept;
+    /**
+     * @brief Schedules the provided coroutine on the stored scheduler.
+     * @param coro Coroutine to schedule.
+     * @pre The context must have been initialized.
+     */
+    void SpawnToScheduler(Coroutine coro) const noexcept;
 
-private:
-  void* scheduler_ = nullptr;
-  Descriptors descriptors_;
+  private:
+    void* scheduler_ = nullptr;
+    Descriptors descriptors_;
 };
 
 } // namespace detail
@@ -61,108 +61,108 @@ private:
  * @note Coroutine frame destroys on completion.
  */
 class Coroutine {
-private:
-  struct PromiseType : public sched::Resumable<sched::IntrusiveListScheduler> {
-    Coroutine get_return_object();
+  private:
+    struct PromiseType : public sched::Resumable<sched::IntrusiveListScheduler> {
+        Coroutine get_return_object();
 
-    static std::suspend_always initial_suspend() noexcept;
+        static std::suspend_always initial_suspend() noexcept;
 
-    static std::suspend_always final_suspend() noexcept;
+        static std::suspend_always final_suspend() noexcept;
 
-    static void return_void() noexcept;
+        static void return_void() noexcept;
 
-    static void unhandled_exception() noexcept;
+        static void unhandled_exception() noexcept;
+
+        /**
+         * @brief Executes one step of the coroutine on the provided scheduler.
+         * @param scheduler Scheduler which this task was executed on.
+         */
+        void resume(sched::IntrusiveListScheduler& scheduler) noexcept override;
+
+        /**
+         * @brief Requests to reschedule this coroutine after it suspends.
+         */
+        void request_reschedule() noexcept;
+
+      private:
+        /**
+         * @brief Checks and resets the <code>reschedule_requested_</code>.
+         * @return <code>true</code> if rescheduling was requested.
+         */
+        bool check_reschedule_requested() noexcept;
+
+        template <typename Scheduler>
+        void set_execution_context(Scheduler& scheduler) noexcept {
+            ctx_ = detail::ExecutionContext(
+                &scheduler,
+                {.spawn_to_scheduler_ = [](void* scheduler_ctx, Coroutine coro) noexcept {
+                    static_cast<Scheduler*>(scheduler_ctx)->spawn(coro.promise());
+                }}
+            );
+        }
+
+        detail::ExecutionContext& get_execution_context() noexcept;
+
+        template <typename Scheduler>
+        void resume_impl(Scheduler& scheduler) noexcept {
+            const auto handle = std::coroutine_handle<promise_type>::from_promise(*this);
+
+            Coroutine curr_coro(handle);
+            detail::CurrentCoroutineGuard guard(curr_coro);
+
+            set_execution_context(scheduler);
+
+            handle.resume();
+            if (handle.done()) {
+                handle.destroy();
+            } else if (check_reschedule_requested()) {
+                scheduler.spawn(*this);
+            }
+        }
+
+        detail::ExecutionContext ctx_;
+        bool reschedule_requested_ = false;
+
+        friend class Coroutine;
+
+        template <typename Scheduler, typename Routine>
+        friend void go(Scheduler&, const Routine&);
+
+        template <typename Routine>
+        friend void go(const Routine&);
+    };
+
+  public:
+    using promise_type = PromiseType;
+
+    explicit Coroutine(std::coroutine_handle<promise_type> h);
+
+    Coroutine() = default;
+    ~Coroutine() = default;
+
+    Coroutine(const Coroutine&) = delete;
+    Coroutine& operator=(const Coroutine&) = delete;
+
+    Coroutine(Coroutine&& other) noexcept;
+    Coroutine& operator=(Coroutine&& other) noexcept;
 
     /**
-     * @brief Executes one step of the coroutine on the provided scheduler.
-     * @param scheduler Scheduler which this task was executed on.
+     * @return The promise stored inside the coroutine frame.
      */
-    void resume(sched::IntrusiveListScheduler& scheduler) noexcept override;
+    promise_type& promise() const noexcept;
 
     /**
-     * @brief Requests to reschedule this coroutine after it suspends.
+     * @return The currently running coroutine on this thread.
+     * @note Calling this outside of coroutine execution is undefined behavior.
      */
-    void request_reschedule() noexcept;
+    static Coroutine& current() noexcept;
 
   private:
-    /**
-     * @brief Checks and resets the <code>reschedule_requested_</code>.
-     * @return <code>true</code> if rescheduling was requested.
-     */
-    bool check_reschedule_requested() noexcept;
+    std::coroutine_handle<promise_type> handle_ = nullptr;
 
-    template <typename Scheduler>
-    void set_execution_context(Scheduler& scheduler) noexcept {
-      ctx_ = detail::ExecutionContext(
-          &scheduler,
-          {.spawn_to_scheduler_ = [](void* scheduler_ctx, Coroutine coro) noexcept {
-            static_cast<Scheduler*>(scheduler_ctx)->spawn(coro.promise());
-          }}
-      );
-    }
+    inline static thread_local Coroutine* curr_ = nullptr;
 
-    detail::ExecutionContext& get_execution_context() noexcept;
-
-    template <typename Scheduler>
-    void resume_impl(Scheduler& scheduler) noexcept {
-      const auto handle = std::coroutine_handle<promise_type>::from_promise(*this);
-
-      Coroutine curr_coro(handle);
-      detail::CurrentCoroutineGuard guard(curr_coro);
-
-      set_execution_context(scheduler);
-
-      handle.resume();
-      if (handle.done()) {
-        handle.destroy();
-      } else if (check_reschedule_requested()) {
-        scheduler.spawn(*this);
-      }
-    }
-
-    detail::ExecutionContext ctx_;
-    bool reschedule_requested_ = false;
-
-    friend class Coroutine;
-
-    template <typename Scheduler, typename Routine>
-    friend void go(Scheduler&, const Routine&);
-
-    template <typename Routine>
-    friend void go(const Routine&);
-  };
-
-public:
-  using promise_type = PromiseType;
-
-  explicit Coroutine(std::coroutine_handle<promise_type> h);
-
-  Coroutine() = default;
-  ~Coroutine() = default;
-
-  Coroutine(const Coroutine&) = delete;
-  Coroutine& operator=(const Coroutine&) = delete;
-
-  Coroutine(Coroutine&& other) noexcept;
-  Coroutine& operator=(Coroutine&& other) noexcept;
-
-  /**
-   * @return The promise stored inside the coroutine frame.
-   */
-  promise_type& promise() const noexcept;
-
-  /**
-   * @return The currently running coroutine on this thread.
-   * @note Calling this outside of coroutine execution is undefined behavior.
-   */
-  static Coroutine& current() noexcept;
-
-private:
-  std::coroutine_handle<promise_type> handle_ = nullptr;
-
-  inline static thread_local Coroutine* curr_ = nullptr;
-
-  friend class detail::CurrentCoroutineGuard;
+    friend class detail::CurrentCoroutineGuard;
 };
 
 } // namespace art::coro
