@@ -42,12 +42,9 @@ void ThreadPool::run() {
 }
 
 void ThreadPool::spawn(Resumable<IntrusiveListScheduler>& task) noexcept {
-    {
-        std::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
-        queue_.push_back(task);
-    }
-
+    queue_.push_back(task);
     cv_.notify_one();
 }
 
