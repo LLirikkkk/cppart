@@ -80,16 +80,16 @@ class Coroutine {
         void resume(sched::IntrusiveListScheduler& scheduler) noexcept override;
 
         /**
-         * @brief Requests to reschedule this coroutine after it suspends.
+         * @brief Requests yield.
          */
-        void request_reschedule() noexcept;
+        void yield() noexcept;
 
       private:
         /**
-         * @brief Checks and resets the <code>reschedule_requested_</code>.
-         * @return <code>true</code> if rescheduling was requested.
+         * @brief Checks and resets the <code>yielded_</code>.
+         * @return <code>true</code> if yield was requested.
          */
-        bool check_reschedule_requested() noexcept;
+        bool is_yielded() noexcept;
 
         template <typename Scheduler>
         void set_execution_context(Scheduler& scheduler) noexcept {
@@ -115,13 +115,13 @@ class Coroutine {
             handle.resume();
             if (handle.done()) {
                 handle.destroy();
-            } else if (check_reschedule_requested()) {
+            } else if (is_yielded()) {
                 scheduler.spawn(*this);
             }
         }
 
         detail::ExecutionContext ctx_;
-        bool reschedule_requested_ = false;
+        bool yielded_ = false;
 
         friend class Coroutine;
 

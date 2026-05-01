@@ -9,7 +9,7 @@ bool YieldAwaiter::await_ready() noexcept {
 }
 
 void YieldAwaiter::await_suspend(std::coroutine_handle<Coroutine::promise_type> handle) noexcept {
-    handle.promise().request_reschedule();
+    handle.promise().yield();
 }
 
 void YieldAwaiter::await_resume() noexcept {}

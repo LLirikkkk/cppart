@@ -48,13 +48,13 @@ void Coroutine::PromiseType::resume(sched::IntrusiveListScheduler& scheduler) no
     resume_impl(scheduler);
 }
 
-void Coroutine::PromiseType::request_reschedule() noexcept {
-    reschedule_requested_ = true;
+void Coroutine::PromiseType::yield() noexcept {
+    yielded_ = true;
 }
 
-bool Coroutine::PromiseType::check_reschedule_requested() noexcept {
-    bool res = reschedule_requested_;
-    reschedule_requested_ = false;
+bool Coroutine::PromiseType::is_yielded() noexcept {
+    bool res = yielded_;
+    yielded_ = false;
 
     return res;
 }
