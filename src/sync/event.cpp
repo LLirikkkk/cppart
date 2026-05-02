@@ -15,7 +15,7 @@ bool EventAwaiter::await_ready() const noexcept {
 
 bool EventAwaiter::await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept {
     handle_ = handle;
-    EventAwaiter* head_old = event_->head_.load();
+    auto* head_old = event_->head_.load();
     do {
         if (head_old == &Event::emitted_) {
             return false;
@@ -32,9 +32,9 @@ void EventAwaiter::await_resume() noexcept {}
 } // namespace detail
 
 void Event::emit() noexcept {
-    const detail::EventAwaiter* head_old = head_.exchange(&emitted_);
+    const auto* head_old = head_.exchange(&emitted_);
     while (head_old != nullptr) {
-        const detail::EventAwaiter* next = head_old->next_;
+        const auto* next = head_old->next_;
         head_old->handle_.promise().reschedule();
         head_old = next;
     }
