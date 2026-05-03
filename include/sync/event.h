@@ -51,7 +51,7 @@ class Event {
     bool emitted() const noexcept;
 
     /**
-     * @brief Suspends the coroutine until emission, if the event is not emitted.
+     * @brief If the event is not emitted, suspends the coroutine until emission.
      * @return <code>EventAwaiter</code>.
      */
     detail::EventAwaiter wait() noexcept;
