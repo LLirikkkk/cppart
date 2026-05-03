@@ -34,12 +34,26 @@ class EventAwaiter {
 
 } // namespace detail
 
+/**
+ * @brief Primitive of synchronization that allows coroutines to wait something. Cannot be used after emission.
+ */
 class Event {
   public:
+    /**
+     * @brief Reschedules all waiting coroutines. If called more than once has no effect.
+     */
     void emit() noexcept;
 
+    /**
+     * @brief Checks if the event is emitted.
+     * @return <code>true</code> if event was emitted.
+     */
     bool emitted() const noexcept;
 
+    /**
+     * @brief Suspends the coroutine until emission, if the event is not emitted.
+     * @return <code>EventAwaiter</code>.
+     */
     detail::EventAwaiter wait() noexcept;
 
   private:

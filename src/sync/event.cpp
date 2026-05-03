@@ -33,7 +33,7 @@ void EventAwaiter::await_resume() noexcept {}
 
 void Event::emit() noexcept {
     const auto* head_old = head_.exchange(&emitted_);
-    while (head_old != nullptr) {
+    while (head_old != &emitted_ && head_old != nullptr) {
         const auto* next = head_old->next_;
         head_old->handle_.promise().reschedule();
         head_old = next;
