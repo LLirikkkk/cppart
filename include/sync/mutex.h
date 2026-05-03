@@ -36,10 +36,23 @@ class MutexLockAwaiter {
 
 class Mutex {
   public:
+    /**
+     * @brief Tries to acquire the mutex without suspending.
+     * @return <code>true</code> if the coroutine acquired the mutex.
+     */
     bool try_lock() noexcept;
 
+    /**
+     * @brief Acquires the mutex. If the mutex is already acquired by other coroutine, the current coroutine suspends
+     * until it acquires the mutex.
+     * @return <code>MutexLockAwaiter</code>.
+     */
     detail::MutexLockAwaiter lock() noexcept;
 
+    /**
+     * @brief Releases the mutex. Must be called after lock().
+     * @return <code>std::suspend_never</code>.
+     */
     std::suspend_never unlock() noexcept;
 
   private:
