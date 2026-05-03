@@ -118,6 +118,9 @@ struct PromiseType : public sched::Resumable<sched::IntrusiveListScheduler> {
      */
     void yield() noexcept;
 
+    /**
+     * @brief Reschedules suspended coroutine on the scheduler which it was executed on.
+     */
     void reschedule() noexcept;
 
   private:
