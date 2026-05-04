@@ -77,11 +77,11 @@ void PromiseType::yield() noexcept {
 }
 
 void PromiseType::reschedule() noexcept {
-    if (!reschedule_requested_.exchange(true)) {
+    if (!reschedule_requested_.exchange(true, std::memory_order_acq_rel)) {
         return;
     }
 
-    reschedule_requested_.store(false);
+    reschedule_requested_.store(false, std::memory_order_release);
 
     ctx_.spawn_to_scheduler(*this);
 }
