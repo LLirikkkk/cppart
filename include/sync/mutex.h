@@ -56,6 +56,8 @@ class Mutex {
     std::suspend_never unlock() noexcept;
 
   private:
+    void remove_from_wait_list(detail::MutexLockAwaiter* awaiter) noexcept;
+
     // If lowest bit is 0, mutex is released. If lowest bit is 1, mutex is acquired. Other bits is number of waiters.
     std::atomic<std::size_t> state_ = 0;
     detail::MutexLockAwaiter sentinel_;

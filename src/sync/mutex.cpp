@@ -21,21 +21,7 @@ bool MutexLockAwaiter::await_suspend(std::coroutine_handle<coro::Coroutine::prom
         return true;
     }
 
-    mutex_->state_.fetch_sub(2);
-
-    mutex_->sentinel_.next_.store(nullptr);
-    auto* next = next_.load();
-    if (next == nullptr) {
-        if (auto* expected = this; mutex_->tail_.compare_exchange_strong(expected, &mutex_->sentinel_)) {
-            return false;
-        }
-
-        do {
-            next = next_.load();
-        } while (next == nullptr);
-    }
-
-    mutex_->sentinel_.next_.store(next);
+    mutex_->remove_from_wait_list(this);
 
     return false;
 }
@@ -58,28 +44,29 @@ std::suspend_never Mutex::unlock() noexcept {
         return {};
     }
 
-    state_.fetch_sub(2);
-
     auto* head = sentinel_.next_.load();
-    sentinel_.next_.store(nullptr);
-    auto* next = head->next_.load();
-    if (next == nullptr) {
-        if (auto* expected = head; tail_.compare_exchange_strong(expected, &sentinel_)) {
-            head->handle_.promise().reschedule();
-
-            return {};
-        }
-
-        do {
-            next = head->next_.load();
-        } while (next == nullptr);
-    }
-
-    sentinel_.next_.store(next);
+    remove_from_wait_list(head);
 
     head->handle_.promise().reschedule();
 
     return {};
+}
+
+void Mutex::remove_from_wait_list(detail::MutexLockAwaiter* awaiter) noexcept {
+    state_.fetch_sub(2);
+    sentinel_.next_.store(nullptr);
+    auto* next = awaiter->next_.load();
+    if (next == nullptr) {
+        if (auto* expected = awaiter; tail_.compare_exchange_strong(expected, &sentinel_)) {
+            return;
+        }
+
+        do {
+            next = awaiter->next_.load();
+        } while (next == nullptr);
+    }
+
+    sentinel_.next_.store(next);
 }
 
 } // namespace art::sync
