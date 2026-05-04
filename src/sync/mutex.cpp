@@ -15,16 +15,15 @@ bool MutexLockAwaiter::await_suspend(std::coroutine_handle<coro::Coroutine::prom
     handle_ = handle;
     auto* prev = mutex_->tail_.exchange(this);
     prev->next_.store(this);
-    if (mutex_->state_.exchange(Mutex::State::LOCKED_HAS_WAITERS) != Mutex::State::UNLOCKED) {
+
+    mutex_->state_.fetch_add(2);
+    if ((mutex_->state_.fetch_or(1) & 1) == 1) {
         return true;
     }
 
-    if (prev != &mutex_->sentinel_) {
-        return true;
-    }
+    mutex_->state_.fetch_sub(2);
 
     mutex_->sentinel_.next_.store(nullptr);
-
     auto* next = next_.load();
     if (next == nullptr) {
         if (auto* expected = this; mutex_->tail_.compare_exchange_strong(expected, &mutex_->sentinel_)) {
@@ -46,8 +45,8 @@ void MutexLockAwaiter::await_resume() noexcept {}
 } // namespace detail
 
 bool Mutex::try_lock() noexcept {
-    auto expected = State::UNLOCKED;
-    return state_.compare_exchange_strong(expected, State::LOCKED_NO_WAITERS);
+    std::uint64_t expected = 0;
+    return state_.compare_exchange_strong(expected, 1);
 }
 
 detail::MutexLockAwaiter Mutex::lock() noexcept {
@@ -55,21 +54,14 @@ detail::MutexLockAwaiter Mutex::lock() noexcept {
 }
 
 std::suspend_never Mutex::unlock() noexcept {
-    if (auto expected_state = State::LOCKED_NO_WAITERS;
-        state_.compare_exchange_strong(expected_state, State::UNLOCKED)) {
+    if (std::uint64_t expected_state = 1; state_.compare_exchange_strong(expected_state, 0)) {
         return {};
     }
 
+    state_.fetch_sub(2);
+
     auto* head = sentinel_.next_.load();
-    if (head == nullptr) {
-        do {
-            head = sentinel_.next_.load();
-        } while (head == nullptr);
-    }
-
     sentinel_.next_.store(nullptr);
-    state_ = State::LOCKED_NO_WAITERS;
-
     auto* next = head->next_.load();
     if (next == nullptr) {
         if (auto* expected = head; tail_.compare_exchange_strong(expected, &sentinel_)) {
@@ -84,7 +76,6 @@ std::suspend_never Mutex::unlock() noexcept {
     }
 
     sentinel_.next_.store(next);
-    state_ = State::LOCKED_HAS_WAITERS;
 
     head->handle_.promise().reschedule();
 

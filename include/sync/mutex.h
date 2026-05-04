@@ -56,13 +56,8 @@ class Mutex {
     std::suspend_never unlock() noexcept;
 
   private:
-    enum class State : std::uint8_t {
-        UNLOCKED,
-        LOCKED_NO_WAITERS,
-        LOCKED_HAS_WAITERS
-    };
-
-    std::atomic<State> state_ = State::UNLOCKED;
+    // If lowest bit is 0, mutex is released. If lowest bit is 1, mutex is acquired. Other bits is number of waiters.
+    std::atomic<std::size_t> state_ = 0;
     detail::MutexLockAwaiter sentinel_;
     std::atomic<detail::MutexLockAwaiter*> tail_ = &sentinel_;
 
