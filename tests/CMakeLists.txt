@@ -12,6 +12,8 @@ target_sources(
         sync/event-tp-test.cpp
         sync/mutex-test.cpp
         sync/mutex-tp-test.cpp
+        sync/channel-test.cpp
+        sync/channel-tp-test.cpp
         utils/alloc-count.cpp
         utils/wait-group.cpp
 
