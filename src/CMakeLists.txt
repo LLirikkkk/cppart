@@ -43,12 +43,12 @@ cppart_configure_compiler(cppart)
 cppart_set_compiler_warnings(cppart)
 
 find_package(boost_intrusive CONFIG REQUIRED)
-find_package(boost_circular_buffer CONFIG REQUIRED)
+find_package(MPMCQueue CONFIG REQUIRED)
 
 target_link_libraries(
         cppart
 
         PUBLIC
         Boost::intrusive
-        Boost::circular_buffer
+        MPMCQueue::MPMCQueue
 )
