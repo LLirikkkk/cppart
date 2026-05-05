@@ -8,7 +8,7 @@
       "default-features": false
     },
     {
-      "name": "mpmcqueue",
+      "name": "boost-circular-buffer",
       "default-features": false
     }
   ],
