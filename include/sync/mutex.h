@@ -7,37 +7,32 @@
 
 namespace art::sync {
 
-class Mutex;
-
-namespace detail {
-
-class MutexLockAwaiter {
-  public:
-    MutexLockAwaiter() = default;
-
-    explicit MutexLockAwaiter(Mutex& mutex) noexcept;
-
-    bool await_ready() const noexcept;
-
-    bool await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept;
-
-    static void await_resume() noexcept;
-
-  private:
-    std::coroutine_handle<coro::Coroutine::promise_type> handle_ = nullptr;
-    std::atomic<MutexLockAwaiter*> next_ = nullptr;
-
-    Mutex* mutex_ = nullptr;
-
-    friend class art::sync::Mutex;
-};
-
-} // namespace detail
-
 /**
  * @brief Primitive of synchronization that allows serializing access to a shared resource.
  */
 class Mutex {
+  private:
+    class Awaiter {
+      public:
+        Awaiter() = default;
+
+        explicit Awaiter(Mutex& mutex) noexcept;
+
+        bool await_ready() const noexcept;
+
+        bool await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept;
+
+        static void await_resume() noexcept;
+
+      private:
+        std::coroutine_handle<coro::Coroutine::promise_type> handle_ = nullptr;
+        std::atomic<Awaiter*> next_ = nullptr;
+
+        Mutex* mutex_ = nullptr;
+
+        friend class Mutex;
+    };
+
   public:
     /**
      * @brief Tries to acquire the mutex without suspending.
@@ -50,7 +45,7 @@ class Mutex {
      * until it acquires the mutex.
      * @return <code>MutexLockAwaiter</code>.
      */
-    detail::MutexLockAwaiter lock() noexcept;
+    Awaiter lock() noexcept;
 
     /**
      * @brief Releases the mutex. Must be called after lock().
@@ -59,14 +54,12 @@ class Mutex {
     std::suspend_never unlock() noexcept;
 
   private:
-    void remove_from_wait_list(detail::MutexLockAwaiter* awaiter) noexcept;
+    void remove_from_wait_list(Awaiter* awaiter) noexcept;
 
     // If lowest bit is 0, mutex is released. If lowest bit is 1, mutex is acquired. Other bits is number of waiters.
     std::atomic<std::size_t> state_ = 0;
-    detail::MutexLockAwaiter sentinel_;
-    std::atomic<detail::MutexLockAwaiter*> tail_ = &sentinel_;
-
-    friend class detail::MutexLockAwaiter;
+    Awaiter sentinel_;
+    std::atomic<Awaiter*> tail_ = &sentinel_;
 };
 
 } // namespace art::sync

@@ -2,16 +2,14 @@
 
 namespace art::sync {
 
-namespace detail {
-
-MutexLockAwaiter::MutexLockAwaiter(Mutex& mutex) noexcept
+Mutex::Awaiter::Awaiter(Mutex& mutex) noexcept
     : mutex_(&mutex) {}
 
-bool MutexLockAwaiter::await_ready() const noexcept {
+bool Mutex::Awaiter::await_ready() const noexcept {
     return mutex_->try_lock();
 }
 
-bool MutexLockAwaiter::await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept {
+bool Mutex::Awaiter::await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept {
     handle_ = handle;
     auto* prev = mutex_->tail_.exchange(this);
     prev->next_.store(this);
@@ -26,17 +24,15 @@ bool MutexLockAwaiter::await_suspend(std::coroutine_handle<coro::Coroutine::prom
     return false;
 }
 
-void MutexLockAwaiter::await_resume() noexcept {}
-
-} // namespace detail
+void Mutex::Awaiter::await_resume() noexcept {}
 
 bool Mutex::try_lock() noexcept {
     std::uint64_t expected = 0;
     return state_.compare_exchange_strong(expected, 1);
 }
 
-detail::MutexLockAwaiter Mutex::lock() noexcept {
-    return detail::MutexLockAwaiter(*this);
+Mutex::Awaiter Mutex::lock() noexcept {
+    return Awaiter(*this);
 }
 
 std::suspend_never Mutex::unlock() noexcept {
@@ -52,7 +48,7 @@ std::suspend_never Mutex::unlock() noexcept {
     return {};
 }
 
-void Mutex::remove_from_wait_list(detail::MutexLockAwaiter* awaiter) noexcept {
+void Mutex::remove_from_wait_list(Awaiter* awaiter) noexcept {
     state_.fetch_sub(2);
     sentinel_.next_.store(nullptr);
     auto* next = awaiter->next_.load();
