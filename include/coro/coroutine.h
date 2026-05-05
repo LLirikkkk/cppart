@@ -66,6 +66,10 @@ class Coroutine {
   public:
     using promise_type = PromiseType;
 
+    /**
+     * Constructs instance of Coroutine bound to the provided handler.
+     * @param h Coroutine handler which this instance will bound to.
+     */
     explicit Coroutine(std::coroutine_handle<promise_type> h);
 
     Coroutine() = default;
