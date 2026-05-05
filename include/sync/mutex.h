@@ -34,6 +34,9 @@ class MutexLockAwaiter {
 
 } // namespace detail
 
+/**
+ * @brief Primitive of synchronization that allows serializing access to a shared resource.
+ */
 class Mutex {
   public:
     /**
