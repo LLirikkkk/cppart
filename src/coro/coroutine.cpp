@@ -26,7 +26,7 @@ void ExecutionContext::spawn_to_scheduler(PromiseType& promise) const noexcept {
 
 } // namespace detail
 
-Coroutine::Coroutine(const std::coroutine_handle<promise_type> h)
+Coroutine::Coroutine(const std::coroutine_handle<promise_type> h) noexcept
     : handle_(h) {}
 
 Coroutine::Coroutine(Coroutine&& other) noexcept
