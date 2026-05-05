@@ -2,18 +2,16 @@
 
 namespace art::sync {
 
-detail::EventAwaiter Event::emitted_;
+Event::Awaiter Event::emitted_;
 
-namespace detail {
-
-EventAwaiter::EventAwaiter(Event& event) noexcept
+Event::Awaiter::Awaiter(Event& event) noexcept
     : event_(&event) {}
 
-bool EventAwaiter::await_ready() const noexcept {
+bool Event::Awaiter::await_ready() const noexcept {
     return event_->emitted();
 }
 
-bool EventAwaiter::await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept {
+bool Event::Awaiter::await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept {
     handle_ = handle;
     auto* head_old = event_->head_.load(std::memory_order_acquire);
     do {
@@ -29,9 +27,7 @@ bool EventAwaiter::await_suspend(std::coroutine_handle<coro::Coroutine::promise_
     return true;
 }
 
-void EventAwaiter::await_resume() noexcept {}
-
-} // namespace detail
+void Event::Awaiter::await_resume() noexcept {}
 
 void Event::emit() noexcept {
     const auto* head_old = head_.exchange(&emitted_, std::memory_order_acq_rel);
@@ -46,8 +42,8 @@ bool Event::emitted() const noexcept {
     return head_.load(std::memory_order_acquire) == &emitted_;
 }
 
-detail::EventAwaiter Event::wait() noexcept {
-    return detail::EventAwaiter(*this);
+Event::Awaiter Event::wait() noexcept {
+    return Awaiter(*this);
 }
 
 } // namespace art::sync
