@@ -77,7 +77,7 @@ class BufferedChannel {
 
             std::unique_lock lock(state_->mtx_);
 
-            if (!state_->has_recv_waiters(lock)) {
+            if (state_->has_recv_waiters(lock)) {
                 auto& waiter = static_cast<RecvAwaiter&>(state_->waiters_.front());
                 state_->waiters_.pop_front();
 
@@ -128,7 +128,7 @@ class BufferedChannel {
                 std::construct_at(std::addressof(value_), std::move(state_->buff_.front()));
                 state_->buff_.pop_front();
 
-                if (!state_->waiters_.empty()) {
+                if (state_->has_send_waiters(lock)) {
                     auto& waiter = static_cast<SendAwaiter&>(state_->waiters_.front());
                     state_->waiters_.pop_front();
 
@@ -142,7 +142,7 @@ class BufferedChannel {
                 return false;
             }
 
-            if (!state_->has_send_waiters(lock)) {
+            if (state_->has_send_waiters(lock)) {
                 auto& waiter = static_cast<SendAwaiter&>(state_->waiters_.front());
                 state_->waiters_.pop_front();
 
