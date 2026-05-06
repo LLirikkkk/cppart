@@ -16,7 +16,7 @@ TEST(ChannelTest, BasicSendRecv) {
     bool done = false;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        sync::BufferedChannel<int> ch{4};
+        sync::BufferedChannel<std::int32_t> ch(4);
 
         co_await ch.send(10);
         co_await ch.send(20);
@@ -29,7 +29,7 @@ TEST(ChannelTest, BasicSendRecv) {
         done = true;
     });
 
-    size_t tasks = loop.run();
+    std::size_t tasks = loop.run();
 
     ASSERT_EQ(tasks, 1);
     ASSERT_TRUE(done);
@@ -49,7 +49,7 @@ TEST(ChannelTest, MoveOnlyItem) {
     sched::RunLoop loop;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        sync::BufferedChannel<MoveOnly> ch{3};
+        sync::BufferedChannel<MoveOnly> ch(3);
 
         co_await ch.send({});
         co_await ch.send({});
@@ -63,15 +63,15 @@ TEST(ChannelTest, MoveOnlyItem) {
 
 TEST(ChannelTest, NonDefaultConstructibleItem) {
     struct NonDefaultConstructible {
-        explicit NonDefaultConstructible(int /*unused*/) {}
+        explicit NonDefaultConstructible(std::int32_t /*unused*/) {}
     };
 
     sched::RunLoop loop;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        sync::BufferedChannel<NonDefaultConstructible> ch{1};
+        sync::BufferedChannel<NonDefaultConstructible> ch(1);
 
-        co_await ch.send(NonDefaultConstructible{42});
+        co_await ch.send(NonDefaultConstructible(42));
         co_await ch.recv();
     });
 
@@ -81,18 +81,18 @@ TEST(ChannelTest, NonDefaultConstructibleItem) {
 TEST(ChannelTest, SuspendReceiver) {
     sched::RunLoop loop;
 
-    sync::BufferedChannel<int> ch{2};
+    sync::BufferedChannel<int> ch(2);
 
     bool got = false;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        int v = co_await ch.recv();
+        std::int32_t v = co_await ch.recv();
         EXPECT_EQ(v, 99);
         got = true;
     });
 
     {
-        size_t tasks = loop.run();
+        std::size_t tasks = loop.run();
         ASSERT_LT(tasks, 3);
         ASSERT_FALSE(got);
     }
@@ -109,19 +109,19 @@ TEST(ChannelTest, SuspendReceiver) {
 TEST(ChannelTest, SuspendSender) {
     sched::RunLoop loop;
 
-    sync::BufferedChannel<int> ch{2};
+    sync::BufferedChannel<std::int32_t> ch(2);
 
-    int sent = 0;
+    std::int32_t sent = 0;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        for (int v = 0; v < 3; ++v) {
+        for (std::int32_t v = 0; v < 3; ++v) {
             co_await ch.send(v);
             ++sent;
         }
     });
 
     {
-        size_t tasks = loop.run();
+        std::size_t tasks = loop.run();
         ASSERT_LT(tasks, 6);
         ASSERT_EQ(sent, 2);
     }
@@ -130,7 +130,7 @@ TEST(ChannelTest, SuspendSender) {
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
         {
-            int v = co_await ch.recv(); // wakes sender
+            std::int32_t v = co_await ch.recv(); // wakes sender
             EXPECT_EQ(v, 0);
         }
 
@@ -152,12 +152,12 @@ TEST(ChannelTest, SuspendSender) {
 TEST(ChannelTest, FIFO) {
     sched::RunLoop loop;
 
-    sync::BufferedChannel<int> ch{8};
+    sync::BufferedChannel<std::int32_t> ch(8);
 
-    constexpr int N = 128;
+    constexpr std::int32_t N = 128;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        for (int i = 0; i < N; ++i) {
+        for (std::int32_t i = 0; i < N; ++i) {
             co_await ch.send(i);
             if (i % 3 == 0) {
                 co_await coro::yield();
@@ -168,18 +168,19 @@ TEST(ChannelTest, FIFO) {
     bool done = false;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        for (int i = 0; i < N; ++i) {
-            int v = co_await ch.recv();
+        for (std::int32_t i = 0; i < N; ++i) {
+            std::int32_t v = co_await ch.recv();
             EXPECT_EQ(v, i);
             if (i % 2 == 0) {
                 co_await coro::yield();
             }
         }
+
         done = true;
     });
 
     {
-        size_t tasks = loop.run();
+        std::size_t tasks = loop.run();
         ASSERT_LT(tasks, 512);
     }
 
@@ -190,9 +191,9 @@ TEST(ChannelTest, ZeroBufferRendezvous) {
     sched::RunLoop loop;
 
     // Zero-capacity (rendezvous) channel
-    sync::BufferedChannel<int> ch{0};
+    sync::BufferedChannel<std::int32_t> ch(0);
 
-    int received = -1;
+    std::int32_t received = -1;
     bool done = false;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
@@ -201,7 +202,7 @@ TEST(ChannelTest, ZeroBufferRendezvous) {
     });
 
     {
-        size_t tasks = loop.run();
+        std::size_t tasks = loop.run();
         ASSERT_LT(tasks, 3);
         ASSERT_FALSE(done);
     }
@@ -220,9 +221,9 @@ TEST(ChannelTest, ZeroBufferRendezvousReverse) {
     sched::RunLoop loop;
 
     // Zero-capacity (rendezvous) channel
-    sync::BufferedChannel<int> ch{0};
+    sync::BufferedChannel<std::int32_t> ch(0);
 
-    int received = -1;
+    std::int32_t received = -1;
     bool done = false;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
@@ -230,7 +231,7 @@ TEST(ChannelTest, ZeroBufferRendezvousReverse) {
     });
 
     {
-        size_t tasks = loop.run();
+        std::size_t tasks = loop.run();
         ASSERT_LT(tasks, 3);
         ASSERT_FALSE(done);
     }
@@ -249,14 +250,14 @@ TEST(ChannelTest, ZeroBufferRendezvousReverse) {
 namespace {
 
 struct Counter {
-    inline static int moves = 0;
-    inline static int copies = 0;
+    inline static std::int32_t moves = 0;
+    inline static std::int32_t copies = 0;
 
-    int value = 0;
+    std::int32_t value = 0;
 
     Counter() = default;
 
-    explicit Counter(int v)
+    explicit Counter(std::int32_t v)
         : value(v) {}
 
     Counter(const Counter& other)
@@ -264,14 +265,34 @@ struct Counter {
         ++copies;
     }
 
-    Counter& operator=(const Counter& other) = delete;
+    // TODO: needs to support types without copy assignment operator
+    Counter& operator=(const Counter& other) {
+        if (this == &other) {
+            return *this;
+        }
+
+        value = other.value;
+        ++copies;
+
+        return *this;
+    }
 
     Counter(Counter&& other) noexcept
         : value(other.value) {
         ++moves;
     }
 
-    Counter& operator=(Counter&& other) noexcept = delete;
+    // TODO: needs to support types without move assignment operator
+    Counter& operator=(Counter&& other) noexcept {
+        if (this == &other) {
+            return *this;
+        }
+
+        value = other.value;
+        ++moves;
+
+        return *this;
+    }
 
     static void reset() {
         moves = 0;
@@ -286,9 +307,9 @@ TEST(ChannelTest, ConsumerProducerExchange) {
 
     Counter::reset();
 
-    sync::BufferedChannel<Counter> ch{1};
+    sync::BufferedChannel<Counter> ch(1);
 
-    int result = 0;
+    std::int32_t result = 0;
     bool done = false;
 
     // Consumer
@@ -300,7 +321,7 @@ TEST(ChannelTest, ConsumerProducerExchange) {
 
     // Producer
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        co_await ch.send(Counter{123});
+        co_await ch.send(Counter(123));
     });
 
     loop.run();
@@ -317,14 +338,14 @@ TEST(ChannelTest, ProducerConsumerExchange) {
 
     Counter::reset();
 
-    sync::BufferedChannel<Counter> ch{0};
+    sync::BufferedChannel<Counter> ch(0);
 
-    int result = 0;
+    std::int32_t result = 0;
     bool done = false;
 
     // Producer
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        co_await ch.send(Counter{123});
+        co_await ch.send(Counter(123));
     });
 
     // Consumer
@@ -346,20 +367,21 @@ TEST(ChannelTest, ProducerConsumerExchange) {
 TEST(ChannelTest, ZeroBufferMultipleProducers) {
     sched::RunLoop loop;
 
-    sync::BufferedChannel<int> ch{0};
+    sync::BufferedChannel<std::int32_t> ch(0);
 
     bool consumer_done = false;
-    std::vector<int> received;
+    std::vector<std::int32_t> received;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        for (int i = 0; i < 3; ++i) {
-            int value = co_await ch.recv();
+        for (std::int32_t i = 0; i < 3; ++i) {
+            std::int32_t value = co_await ch.recv();
             received.push_back(value);
         }
+
         consumer_done = true;
     });
 
-    for (int i = 0; i < 3; ++i) {
+    for (std::int32_t i = 0; i < 3; ++i) {
         coro::go(loop, [&ch, i](this auto) -> coro::Coroutine {
             co_await ch.send(i * 100);
         });
@@ -377,21 +399,21 @@ TEST(ChannelTest, ZeroBufferMultipleProducers) {
 TEST(ChannelTest, ZeroBufferMultipleConsumers) {
     sched::RunLoop loop;
 
-    sync::BufferedChannel<int> ch{0};
+    sync::BufferedChannel<std::int32_t> ch(0);
 
-    int consumers_done = 0;
-    std::vector<int> received;
+    std::int32_t consumers_done = 0;
+    std::vector<std::int32_t> received;
 
-    for (int i = 0; i < 3; ++i) {
+    for (std::int32_t i = 0; i < 3; ++i) {
         coro::go(loop, [&](this auto) -> coro::Coroutine {
-            int value = co_await ch.recv();
+            std::int32_t value = co_await ch.recv();
             received.push_back(value);
-            consumers_done++;
+            ++consumers_done;
         });
     }
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        for (int i = 0; i < 3; ++i) {
+        for (std::int32_t i = 0; i < 3; ++i) {
             co_await ch.send(i * 100);
         }
     });
