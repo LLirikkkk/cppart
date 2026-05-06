@@ -171,17 +171,37 @@ class BufferedChannel {
     };
 
   public:
+    /**
+     * @brief Constructs instance of BufferedChannel with provided capacity.
+     * @param capacity Capacity for internal buffer.
+     */
     explicit BufferedChannel(const std::size_t capacity)
         : state_(std::make_shared<State>(capacity)) {}
 
+    /**
+     * @brief Sends the provided value to the channel. If the channel is full, the coroutine suspends until there is
+     * free space.
+     * @param value Value to send to the channel.
+     * @return <code>SendAwaiter</code>.
+     */
     SendAwaiter send(T&& value) const noexcept(std::is_nothrow_move_constructible_v<T>) {
         return SendAwaiter(state_.get(), std::move(value));
     }
 
+    /**
+     * @brief Sends the provided value to the channel. If the channel is full, the coroutine suspends until there is
+     * free space.
+     * @param value Value to send to the channel.
+     * @return <code>SendAwaiter</code>.
+     */
     SendAwaiter send(const T& value) const noexcept(std::is_nothrow_copy_constructible_v<T>) {
         return SendAwaiter(state_.get(), value);
     }
 
+    /**
+     * @brief Gets the value from the channel. If there is no value, the coroutine suspends until there is a new value.
+     * @return <code>RecvAwaiter</code>.
+     */
     RecvAwaiter recv() const noexcept {
         return RecvAwaiter(state_.get());
     }
