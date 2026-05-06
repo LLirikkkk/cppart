@@ -37,6 +37,14 @@ class BufferedChannel {
             type_of_waiters_ = TypeOfWaiters::RECV;
         }
 
+        bool has_send_waiters(std::unique_lock<std::mutex>& /*unused*/) noexcept {
+            return !waiters_.empty() && type_of_waiters_ == TypeOfWaiters::SEND;
+        }
+
+        bool has_recv_waiters(std::unique_lock<std::mutex>& /*unused*/) noexcept {
+            return !waiters_.empty() && type_of_waiters_ == TypeOfWaiters::RECV;
+        }
+
         enum class TypeOfWaiters : std::uint8_t {
             NONE,
             SEND,
@@ -69,7 +77,7 @@ class BufferedChannel {
 
             std::unique_lock lock(state_->mtx_);
 
-            if (!state_->waiters_.empty() && state_->type_of_waiters_ == State::TypeOfWaiters::RECV) {
+            if (!state_->has_recv_waiters(lock)) {
                 auto& waiter = static_cast<RecvAwaiter&>(state_->waiters_.front());
                 state_->waiters_.pop_front();
 
@@ -134,14 +142,13 @@ class BufferedChannel {
                 return false;
             }
 
-            if (!state_->waiters_.empty() && state_->type_of_waiters_ == State::TypeOfWaiters::SEND) {
+            if (!state_->has_send_waiters(lock)) {
                 auto& waiter = static_cast<SendAwaiter&>(state_->waiters_.front());
                 state_->waiters_.pop_front();
 
                 lock.unlock();
 
                 std::construct_at(std::addressof(value_), std::move(waiter.value_));
-
                 waiter.handle_.promise().reschedule();
 
                 return false;
