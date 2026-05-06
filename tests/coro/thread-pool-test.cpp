@@ -23,14 +23,15 @@ class CoroutineThreadPoolTest : public ::testing::Test {
 };
 
 TEST_F(CoroutineThreadPoolTest, SingleYield) {
-    const int YIELDS = 5;
+    const std::int32_t YIELDS = 5;
     WaitGroup wg;
 
     wg.add(1);
     go(pool, [&](this auto) -> Coroutine {
-        for (size_t i = 0; i < YIELDS; ++i) {
+        for (std::size_t i = 0; i < YIELDS; ++i) {
             co_await yield();
         }
+
         wg.done();
     });
 
@@ -38,17 +39,18 @@ TEST_F(CoroutineThreadPoolTest, SingleYield) {
 }
 
 TEST_F(CoroutineThreadPoolTest, MultipleYields) {
-    const int YIELDS = 7;
-    const int COROUTINES = 10;
+    const std::int32_t YIELDS = 7;
+    const std::int32_t COROUTINES = 10;
 
     WaitGroup wg;
 
-    for (size_t i = 0; i < COROUTINES; ++i) {
+    for (std::size_t i = 0; i < COROUTINES; ++i) {
         wg.add(1);
         go(pool, [&](this auto) -> Coroutine {
-            for (size_t j = 0; j < YIELDS; ++j) {
+            for (std::size_t j = 0; j < YIELDS; ++j) {
                 co_await yield();
             }
+
             wg.done();
         });
     }
@@ -60,12 +62,13 @@ TEST_F(CoroutineThreadPoolTest, NestedYields) {
 
     wg.add(1);
     go(pool, [&](this auto) -> Coroutine {
-        for (size_t i = 0; i < 3; ++i) {
+        for (std::size_t i = 0; i < 3; ++i) {
             co_await yield();
-            for (size_t j = 0; j < 2; ++j) {
+            for (std::size_t j = 0; j < 2; ++j) {
                 co_await yield();
             }
         }
+
         wg.done();
     });
 

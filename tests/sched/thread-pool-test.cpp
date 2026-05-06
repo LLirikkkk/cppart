@@ -26,7 +26,7 @@ class ThreadPoolTest : public ::testing::Test {
 };
 
 TEST_F(ThreadPoolTest, WaitTask) {
-    ThreadPool pool{4};
+    ThreadPool pool(4);
     pool.run();
 
     WaitGroup wg;
@@ -40,7 +40,7 @@ TEST_F(ThreadPoolTest, WaitTask) {
 }
 
 TEST_F(ThreadPoolTest, Wait) {
-    ThreadPool pool{4};
+    ThreadPool pool(4);
     pool.run();
 
     WaitGroup wg;
@@ -55,7 +55,7 @@ TEST_F(ThreadPoolTest, Wait) {
 }
 
 TEST_F(ThreadPoolTest, MultiWait) {
-    ThreadPool pool{1};
+    ThreadPool pool(1);
     pool.run();
 
     for (std::size_t i = 0; i < 3; ++i) {
@@ -72,7 +72,7 @@ TEST_F(ThreadPoolTest, MultiWait) {
 }
 
 TEST_F(ThreadPoolTest, ManyTasks) {
-    ThreadPool pool{4};
+    ThreadPool pool(4);
     pool.run();
 
     static const std::size_t TASKS = 17;
@@ -89,8 +89,8 @@ TEST_F(ThreadPoolTest, ManyTasks) {
 }
 
 TEST_F(ThreadPoolTest, TwoPools) {
-    ThreadPool pool1{1};
-    ThreadPool pool2{1};
+    ThreadPool pool1(1);
+    ThreadPool pool2(1);
 
     pool1.run();
     pool2.run();
@@ -119,7 +119,7 @@ TEST_F(ThreadPoolTest, TwoPools) {
 }
 
 TEST_F(ThreadPoolTest, DoNotSpin) {
-    ThreadPool pool{4};
+    ThreadPool pool(4);
     pool.run();
 
     WaitGroup wg;
@@ -142,7 +142,7 @@ TEST_F(ThreadPoolTest, DoNotSpin) {
 }
 
 TEST_F(ThreadPoolTest, GoAfterWait) {
-    ThreadPool pool{4};
+    ThreadPool pool(4);
     pool.run();
 
     WaitGroup wg;
@@ -164,8 +164,8 @@ TEST_F(ThreadPoolTest, GoAfterWait) {
 }
 
 TEST_F(ThreadPoolTest, CrossGo) {
-    ThreadPool pool1{1};
-    ThreadPool pool2{1};
+    ThreadPool pool1(1);
+    ThreadPool pool2(1);
 
     pool1.run();
     pool2.run();
@@ -183,7 +183,7 @@ TEST_F(ThreadPoolTest, CrossGo) {
 }
 
 TEST_F(ThreadPoolTest, ManyThreads) {
-    ThreadPool pool{3};
+    ThreadPool pool(3);
     pool.run();
 
     WaitGroup wg;
@@ -205,7 +205,7 @@ TEST_F(ThreadPoolTest, ManyThreads) {
 }
 
 TEST_F(ThreadPoolTest, Lifetime) {
-    ThreadPool pool{4};
+    ThreadPool pool(4);
     pool.run();
 
     struct Widget {};
@@ -213,7 +213,7 @@ TEST_F(ThreadPoolTest, Lifetime) {
     auto w = std::make_shared<Widget>();
 
     WaitGroup wg;
-    for (int i = 0; i < 4; ++i) {
+    for (std::int32_t i = 0; i < 4; ++i) {
         wg.add(1);
         go(pool, [w, &wg] {
             wg.done();
@@ -227,10 +227,10 @@ TEST_F(ThreadPoolTest, Lifetime) {
 }
 
 TEST_F(ThreadPoolTest, Counter) {
-    ThreadPool pool{4};
+    ThreadPool pool(4);
     pool.run();
 
-    std::atomic<std::size_t> counter{0};
+    std::atomic<std::size_t> counter = 0;
     static const std::size_t TASKS = 100'500;
 
     WaitGroup wg;
@@ -263,7 +263,7 @@ TEST_F(ThreadPoolTest, NoAllocations) {
     std::array<StackResumable, RESUMABLES> resumables;
 
     {
-        ThreadPool pool{4};
+        ThreadPool pool(4);
         pool.run();
 
         count = g_allocation_count.load();

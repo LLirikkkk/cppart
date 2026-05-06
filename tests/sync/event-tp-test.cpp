@@ -13,17 +13,17 @@ namespace art::test {
 using namespace art;
 
 TEST(EventThreadPoolTest, ConsumerProducer) {
-    sched::ThreadPool pool{4};
+    sched::ThreadPool pool(4);
     pool.run();
 
-    size_t iterations = 0;
-    const size_t LIMIT = 10000;
-    const size_t STEP = 7;
+    std::size_t iterations = 0;
+    const std::size_t LIMIT = 10000;
+    const std::size_t STEP = 7;
 
     while (iterations++ < LIMIT) {
         WaitGroup wg;
         sync::Event event;
-        int data = 0;
+        std::int32_t data = 0;
 
         for (std::size_t i = 0; i < iterations % STEP; ++i) {
             wg.add(1);

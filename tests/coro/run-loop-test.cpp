@@ -34,10 +34,10 @@ TEST_F(CoroutineRunLoopTest, YieldSingle) {
 TEST_F(CoroutineRunLoopTest, YieldMultiple) {
     RunLoop loop;
 
-    const size_t COROUTINES = 7;
-    size_t finished = 0;
+    const std::size_t COROUTINES = 7;
+    std::size_t finished = 0;
 
-    for (size_t i = 0; i < COROUTINES; ++i) {
+    for (std::size_t i = 0; i < COROUTINES; ++i) {
         go(loop, [&](this auto) -> Coroutine {
             ++finished;
             co_return;
@@ -51,11 +51,11 @@ TEST_F(CoroutineRunLoopTest, YieldMultiple) {
 TEST_F(CoroutineRunLoopTest, FireChild) {
     RunLoop loop;
 
-    int counter = 0;
+    std::int32_t counter = 0;
 
     go(loop, [&](this auto) -> Coroutine {
         go([&](this auto) -> Coroutine {
-            counter++;
+            ++counter;
             co_return;
         });
         co_return;
@@ -70,10 +70,10 @@ TEST_F(CoroutineRunLoopTest, FireChild) {
 TEST_F(CoroutineRunLoopTest, PingPongYield) {
     RunLoop loop;
 
-    unsigned int turn = 0;
+    std::uint32_t turn = 0;
 
     go(loop, [&](this auto) -> Coroutine {
-        for (size_t i = 0; i < 3; ++i) {
+        for (std::size_t i = 0; i < 3; ++i) {
             EXPECT_EQ(turn, 0);
             turn ^= 1;
             co_await yield();
@@ -81,7 +81,7 @@ TEST_F(CoroutineRunLoopTest, PingPongYield) {
     });
 
     go(loop, [&](this auto) -> Coroutine {
-        for (size_t i = 0; i < 3; ++i) {
+        for (std::size_t i = 0; i < 3; ++i) {
             EXPECT_EQ(turn, 1);
             turn ^= 1;
             co_await yield();
@@ -95,15 +95,16 @@ TEST_F(CoroutineRunLoopTest, PingPongYield) {
 TEST_F(CoroutineRunLoopTest, YieldGroup) {
     RunLoop loop;
 
-    const size_t COROUTINES = 3;
-    const size_t YIELDS = 4;
-    size_t finished = 0;
+    const std::size_t COROUTINES = 3;
+    const std::size_t YIELDS = 4;
+    std::size_t finished = 0;
 
-    for (size_t i = 0; i < COROUTINES; ++i) {
+    for (std::size_t i = 0; i < COROUTINES; ++i) {
         go(loop, [&](this auto) -> Coroutine {
-            for (size_t k = 0; k < YIELDS; ++k) {
+            for (std::size_t k = 0; k < YIELDS; ++k) {
                 co_await yield();
             }
+
             ++finished;
         });
     }
@@ -113,9 +114,9 @@ TEST_F(CoroutineRunLoopTest, YieldGroup) {
 }
 
 TEST_F(CoroutineRunLoopTest, FIFO) {
-    std::vector<int> order;
+    std::vector<std::int32_t> order;
 
-    auto make_co = [&](int id) -> Coroutine {
+    auto make_co = [&](std::int32_t id) -> Coroutine {
         order.push_back(id);
         co_return;
     };
@@ -132,17 +133,17 @@ TEST_F(CoroutineRunLoopTest, FIFO) {
 
     loop.run();
 
-    std::vector<int> expected{1, 2, 3};
+    std::vector<std::int32_t> expected{1, 2, 3};
     EXPECT_EQ(order, expected);
 }
 
 namespace {
 
-bool g_flag;
+bool g_flag; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
-Coroutine function_coro() {
+Coroutine function_coro() { // NOLINT
     g_flag = true;
-    co_return;
+    co_return; // NOLINT
 }
 
 } // namespace

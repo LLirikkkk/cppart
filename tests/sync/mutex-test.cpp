@@ -15,7 +15,7 @@ TEST(MutexTest, Simple) {
     sched::RunLoop loop;
 
     sync::Mutex mutex;
-    int cs = 0;
+    std::int32_t cs = 0;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
         co_await mutex.lock();
@@ -64,14 +64,14 @@ TEST(MutexTest, TryLock) {
 }
 
 TEST(MutexTest, CriticalSection) {
-    constexpr int CS_NUM = 10;
+    constexpr std::int32_t CS_NUM = 10;
     sched::RunLoop loop;
 
     sync::Mutex mutex;
-    int cs = 0;
+    std::int32_t cs = 0;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
-        for (int i = 0; i < CS_NUM; ++i) {
+        for (std::int32_t i = 0; i < CS_NUM; ++i) {
             co_await mutex.lock();
             ++cs;
             co_await mutex.unlock();
@@ -87,14 +87,14 @@ TEST(MutexTest, Counter) {
     sched::RunLoop loop;
 
     sync::Mutex mutex;
-    int cs = 0;
+    std::int32_t cs = 0;
 
-    constexpr int COROUTINES = 5;
-    constexpr int CS_NUM = 5;
+    constexpr std::int32_t COROUTINES = 5;
+    constexpr std::int32_t CS_NUM = 5;
 
-    for (int i = 0; i < COROUTINES; ++i) {
+    for (std::int32_t i = 0; i < COROUTINES; ++i) {
         coro::go(loop, [&](this auto) -> coro::Coroutine {
-            for (int j = 0; j < CS_NUM; ++j) {
+            for (std::int32_t j = 0; j < CS_NUM; ++j) {
                 co_await mutex.lock();
                 ++cs;
                 co_await mutex.unlock();
@@ -145,27 +145,29 @@ TEST(MutexTest, FIFOWaiters) {
 
     sync::Mutex mutex;
 
-    int next = 0;
-    constexpr int WAITERS = 16;
-    constexpr int YIELDS = 1024;
+    std::int32_t next = 0;
+    constexpr std::int32_t WAITERS = 16;
+    constexpr std::int32_t YIELDS = 1024;
 
     coro::go(loop, [&](this auto) -> coro::Coroutine {
         co_await mutex.lock();
-        for (int i = 0; i < YIELDS; ++i) {
+        for (std::int32_t i = 0; i < YIELDS; ++i) {
             co_await coro::yield();
         }
+
         co_await mutex.unlock();
     });
 
     loop.run_at_most(1);
 
-    for (int i = 0; i < WAITERS; ++i) {
+    for (std::int32_t i = 0; i < WAITERS; ++i) {
         coro::go(loop, [&, i](this auto) -> coro::Coroutine {
             co_await mutex.lock();
             EXPECT_EQ(next, i); // FIFO guarantee
-            next++;
+            ++next;
             co_await mutex.unlock();
         });
+
         loop.run_at_most(1);
     }
 

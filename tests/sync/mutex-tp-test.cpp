@@ -12,17 +12,17 @@ namespace art::test {
 using namespace art;
 
 TEST(MutexThreadPoolTest, CriticalSection) {
-    constexpr int CS_NUM = 1'000'000;
-    int cs = 0;
+    constexpr std::int32_t CS_NUM = 1'000'000;
+    std::int32_t cs = 0;
 
     {
-        sched::ThreadPool pool{4};
+        sched::ThreadPool pool(4);
         sync::Mutex mutex;
         WaitGroup wg;
 
         wg.add(1 + CS_NUM);
         coro::go(pool, [&](this auto) -> coro::Coroutine {
-            for (int j = 0; j < CS_NUM; ++j) {
+            for (std::int32_t j = 0; j < CS_NUM; ++j) {
                 coro::go(pool, [&](this auto) -> coro::Coroutine {
                     co_await mutex.lock();
                     ++cs;
@@ -30,6 +30,7 @@ TEST(MutexThreadPoolTest, CriticalSection) {
                     wg.done();
                 });
             }
+
             wg.done();
             co_return;
         });
@@ -42,16 +43,16 @@ TEST(MutexThreadPoolTest, CriticalSection) {
 }
 
 TEST(MutexThreadPoolTest, TryLockStress) {
-    constexpr int CS_NUM = 1'000'000;
-    int cs = 0;
+    constexpr std::int32_t CS_NUM = 1'000'000;
+    std::int32_t cs = 0;
 
-    sched::ThreadPool pool{4};
+    sched::ThreadPool pool(4);
     sync::Mutex mutex;
     WaitGroup wg;
 
     wg.add(1);
     coro::go(pool, [&](this auto) -> coro::Coroutine {
-        for (int i = 0; i < CS_NUM; ++i) {
+        for (std::int32_t i = 0; i < CS_NUM; ++i) {
             bool locked = false;
             while (!locked) {
                 locked = mutex.try_lock();
@@ -63,6 +64,7 @@ TEST(MutexThreadPoolTest, TryLockStress) {
                 }
             }
         }
+
         wg.done();
     });
 
@@ -73,24 +75,25 @@ TEST(MutexThreadPoolTest, TryLockStress) {
 }
 
 TEST(MutexThreadPoolTest, YieldStress) {
-    constexpr int CS_NUM = 100'000;
-    constexpr int COROUTINES = 8;
-    int cs = 0;
+    constexpr std::int32_t CS_NUM = 100'000;
+    constexpr std::int32_t COROUTINES = 8;
+    std::int32_t cs = 0;
 
-    sched::ThreadPool pool{4};
+    sched::ThreadPool pool(4);
     sync::Mutex mutex;
     WaitGroup wg;
 
     wg.add(COROUTINES);
-    for (int i = 0; i < COROUTINES; ++i) {
+    for (std::int32_t i = 0; i < COROUTINES; ++i) {
         coro::go(pool, [&](this auto) -> coro::Coroutine {
-            for (int j = 0; j < CS_NUM; ++j) {
+            for (std::int32_t j = 0; j < CS_NUM; ++j) {
                 co_await mutex.lock();
                 ++cs;
                 co_await coro::yield();
                 co_await mutex.unlock();
                 co_await coro::yield();
             }
+
             wg.done();
         });
     }

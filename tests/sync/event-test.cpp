@@ -42,17 +42,18 @@ TEST(EventTest, MultipleConsumers) {
     sched::RunLoop loop;
 
     sync::Event event;
-    int work = 0;
-    size_t waiters = 0;
+    std::int32_t work = 0;
+    std::size_t waiters = 0;
 
-    static const size_t CONSUMERS = 7;
+    static const std::size_t CONSUMERS = 7;
 
-    for (size_t i = 0; i < CONSUMERS; ++i) {
+    for (std::size_t i = 0; i < CONSUMERS; ++i) {
         coro::go(loop, [&](this auto) -> coro::Coroutine {
             co_await event.wait();
             EXPECT_EQ(work, 1);
             ++waiters;
         });
+
         loop.run_at_most(1);
     }
 
@@ -79,7 +80,7 @@ TEST(EventTest, SuspendBehavior) {
     });
 
     {
-        size_t tasks = loop.run();
+        std::size_t tasks = loop.run();
         ASSERT_LE(tasks, 1);
     }
 

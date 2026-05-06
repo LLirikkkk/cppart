@@ -160,12 +160,12 @@ TEST_F(RunLoopTest, NoAllocations) {
 TEST_F(RunLoopTest, RescheduleBetweenSchedulers) {
     RunLoop loop;
 
-    int state = 0;
+    std::int32_t state = 0;
 
     struct DualResumable
         : public Resumable<IntrusiveListScheduler>
         , public Resumable<InlineScheduler> {
-        explicit DualResumable(int& s)
+        explicit DualResumable(std::int32_t& s)
             : state(s) {}
 
         void resume(IntrusiveListScheduler& /*unused*/) noexcept final {
@@ -176,10 +176,10 @@ TEST_F(RunLoopTest, RescheduleBetweenSchedulers) {
             state = 2;
         }
 
-        int& state; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+        std::int32_t& state; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
     };
 
-    DualResumable resumable{state};
+    DualResumable resumable(state);
 
     InlineScheduler::instance().spawn(resumable);
 
