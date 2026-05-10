@@ -20,7 +20,7 @@ class Mutex {
 
         bool await_ready() const noexcept;
 
-        bool await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept;
+        void await_suspend(std::coroutine_handle<coro::Coroutine::promise_type> handle) noexcept;
 
         static void await_resume() noexcept;
 
@@ -54,6 +54,8 @@ class Mutex {
     std::suspend_never unlock() noexcept;
 
   private:
+    void resume_next_waiter() noexcept;
+
     void remove_from_wait_list(Awaiter* awaiter) noexcept;
 
     // If lowest bit is 0, mutex is released. If lowest bit is 1, mutex is acquired. Other bits is number of waiters.
