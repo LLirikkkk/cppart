@@ -89,8 +89,8 @@
       "name": "Test-Release",
       "description": "Release test build",
       "inherits": [
-        "Default-Release",
-        "Test-Base"
+        "Test-Base",
+        "Default-Release"
       ]
     },
     {
