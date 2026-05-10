@@ -1,5 +1,8 @@
 add_executable(cppart_tests)
 
+target_compile_features(cppart_tests PUBLIC cxx_std_23)
+set_target_properties(cppart_tests PROPERTIES CXX_EXTENSIONS OFF)
+
 target_sources(
         cppart_tests
 
