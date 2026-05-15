@@ -45,14 +45,14 @@ Build library (Release):
     cmake --preset Release
     cmake --build --preset Release
 
-File of built library locates in build/Release/src
+File of built library locates in build/Release/src.
 
 Build tests (Release):
 
     cmake --preset Test-Release
     cmake --build --preset Test-Release
 
-File of built tests locates in build/Test-Release/tests
+File of built tests locates in build/Test-Release/tests.
 
 All available presets:
 
