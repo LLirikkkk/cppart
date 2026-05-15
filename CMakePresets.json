@@ -13,7 +13,6 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CPPART_BUILD_TESTS": "OFF",
         "CPPART_BUILD_BENCHMARKS": "OFF",
         "CPPART_BUILD_EXAMPLES": "OFF"
@@ -30,7 +29,7 @@
       }
     },
     {
-      "name": "Default-Release",
+      "name": "Release",
       "description": "Release build",
       "inherits": "Base",
       "cacheVariables": {
@@ -38,7 +37,7 @@
       }
     },
     {
-      "name": "Default-Debug",
+      "name": "Debug",
       "description": "Debug build",
       "inherits": "Base",
       "cacheVariables": {
@@ -46,7 +45,7 @@
       }
     },
     {
-      "name": "Default-RelWithDebInfo",
+      "name": "RelWithDebInfo",
       "description": "RelWithDebInfo build",
       "inherits": "Base",
       "cacheVariables": {
@@ -54,33 +53,33 @@
       }
     },
     {
-      "name": "Default-Sanitized",
+      "name": "Sanitized",
       "description": "RelWithDebInfo build with undefined and address sanitizers enabled",
-      "inherits": "Default-RelWithDebInfo",
+      "inherits": "RelWithDebInfo",
       "cacheVariables": {
         "CPPART_SANITIZED": "ON"
       }
     },
     {
-      "name": "Default-SanitizedDebug",
+      "name": "SanitizedDebug",
       "description": "Debug build with undefined and address sanitizers enabled",
-      "inherits": "Default-Debug",
+      "inherits": "Debug",
       "cacheVariables": {
         "CPPART_SANITIZED": "ON"
       }
     },
     {
-      "name": "Default-ThreadSanitized",
+      "name": "ThreadSanitized",
       "description": "RelWithDebInfo build with thread sanitizer enabled",
-      "inherits": "Default-RelWithDebInfo",
+      "inherits": "RelWithDebInfo",
       "cacheVariables": {
         "CPPART_THREAD_SANITIZED": "ON"
       }
     },
     {
-      "name": "Default-ThreadSanitizedDebug",
+      "name": "ThreadSanitizedDebug",
       "description": "Debug build with thread sanitizer enabled",
-      "inherits": "Default-Debug",
+      "inherits": "Debug",
       "cacheVariables": {
         "CPPART_THREAD_SANITIZED": "ON"
       }
@@ -90,7 +89,7 @@
       "description": "Release test build",
       "inherits": [
         "Test-Base",
-        "Default-Release"
+        "Release"
       ]
     },
     {
@@ -98,7 +97,7 @@
       "description": "Debug test build",
       "inherits": [
         "Test-Base",
-        "Default-Debug"
+        "Debug"
       ]
     },
     {
@@ -106,7 +105,7 @@
       "description": "RelWithDebInfo test build",
       "inherits": [
         "Test-Base",
-        "Default-RelWithDebInfo"
+        "RelWithDebInfo"
       ]
     },
     {
@@ -114,7 +113,7 @@
       "description": "RelWithDebInfo test build with undefined and address sanitizers enabled",
       "inherits": [
         "Test-Base",
-        "Default-Sanitized"
+        "Sanitized"
       ]
     },
     {
@@ -122,7 +121,7 @@
       "description": "Debug test build with undefined and address sanitizers enabled",
       "inherits": [
         "Test-Base",
-        "Default-SanitizedDebug"
+        "SanitizedDebug"
       ]
     },
     {
@@ -130,7 +129,7 @@
       "description": "RelWithDebInfo test build with thread sanitizer enabled",
       "inherits": [
         "Test-Base",
-        "Default-ThreadSanitized"
+        "ThreadSanitized"
       ]
     },
     {
@@ -138,7 +137,7 @@
       "description": "Debug test build with thread sanitizer enabled",
       "inherits": [
         "Test-Base",
-        "Default-ThreadSanitizedDebug"
+        "ThreadSanitizedDebug"
       ]
     }
   ]
