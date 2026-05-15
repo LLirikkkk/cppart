@@ -17,7 +17,7 @@ class WaitGroup {
   private:
     std::mutex _lock;
     std::condition_variable _zero_work_cv;
-    std::size_t _work{0};
+    std::size_t _work = 0;
 };
 
 } // namespace art::test
