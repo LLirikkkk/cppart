@@ -140,5 +140,93 @@
         "ThreadSanitizedDebug"
       ]
     }
+  ],
+  "buildPresets": [
+    {
+      "name": "Release",
+      "configurePreset": "Release"
+    },
+    {
+      "name": "Debug",
+      "configurePreset": "Debug"
+    },
+    {
+      "name": "RelWithDebInfo",
+      "configurePreset": "RelWithDebInfo"
+    },
+    {
+      "name": "Sanitized",
+      "configurePreset": "Sanitized"
+    },
+    {
+      "name": "SanitizedDebug",
+      "configurePreset": "SanitizedDebug"
+    },
+    {
+      "name": "ThreadSanitized",
+      "configurePreset": "ThreadSanitized"
+    },
+    {
+      "name": "ThreadSanitizedDebug",
+      "configurePreset": "ThreadSanitizedDebug"
+    },
+    {
+      "name": "Test-Release",
+      "configurePreset": "Test-Release"
+    },
+    {
+      "name": "Test-Debug",
+      "configurePreset": "Test-Debug"
+    },
+    {
+      "name": "Test-RelWithDebInfo",
+      "configurePreset": "Test-RelWithDebInfo"
+    },
+    {
+      "name": "Test-Sanitized",
+      "configurePreset": "Test-Sanitized"
+    },
+    {
+      "name": "Test-SanitizedDebug",
+      "configurePreset": "Test-SanitizedDebug"
+    },
+    {
+      "name": "Test-ThreadSanitized",
+      "configurePreset": "Test-ThreadSanitized"
+    },
+    {
+      "name": "Test-ThreadSanitizedDebug",
+      "configurePreset": "Test-ThreadSanitizedDebug"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "Test-Release",
+      "configurePreset": "Test-Release"
+    },
+    {
+      "name": "Test-Debug",
+      "configurePreset": "Test-Debug"
+    },
+    {
+      "name": "Test-RelWithDebInfo",
+      "configurePreset": "Test-RelWithDebInfo"
+    },
+    {
+      "name": "Test-Sanitized",
+      "configurePreset": "Test-Sanitized"
+    },
+    {
+      "name": "Test-SanitizedDebug",
+      "configurePreset": "Test-SanitizedDebug"
+    },
+    {
+      "name": "Test-ThreadSanitized",
+      "configurePreset": "Test-ThreadSanitized"
+    },
+    {
+      "name": "Test-ThreadSanitizedDebug",
+      "configurePreset": "Test-ThreadSanitizedDebug"
+    }
   ]
 }
